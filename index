@@ -1,0 +1,800 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#ffffff" />
+  <title>REDOOR INFO.</title>
+  <style>
+    :root{
+      --bg:#fff;
+      --text:#111;
+      --muted:#666;
+      --line: rgba(0,0,0,.12);
+      --line2: rgba(0,0,0,.08);
+      --focus: rgba(0,0,0,.14);
+    }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Apple SD Gothic Neo, Noto Sans KR, Helvetica, Arial;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .app{
+      max-width: 720px;
+      margin: 0 auto;
+      padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom) 26px;
+    }
+
+    header{
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(255,255,255,.96);
+      backdrop-filter: blur(8px);
+    }
+    .topbar{
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap:12px;
+      padding: 14px 0 12px;
+    }
+
+    .icon-btn{
+      border:0;
+      background:transparent;
+      padding:8px;
+      margin-left:-8px;
+      cursor:pointer;
+      color:var(--text);
+    }
+    .burger{ width:20px; display:grid; gap:4px; }
+    .burger span{ height:2px; background:#111; display:block; }
+
+    .brand{ min-width:0; }
+    .brand h1{
+      margin:0;
+      font-size:16px;
+      font-weight:900;
+      letter-spacing:-.3px;
+      line-height:1.15;
+    }
+    .brand p{
+      margin:6px 0 0;
+      font-size:12px;
+      color: var(--muted);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .status{ font-size:12px; color: var(--muted); white-space:nowrap; }
+
+    /* Drawer */
+    .drawer{ position:fixed; inset:0; display:none; z-index:50; }
+    .drawer[aria-hidden="false"]{ display:block; }
+    .drawer-backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.45); }
+    .drawer-panel{
+      position:absolute; top:0; left:0;
+      width:min(82vw, 320px);
+      height:100%;
+      background:#fff;
+      border-right:1px solid var(--line2);
+      padding:14px 16px;
+    }
+    .drawer-head{ display:flex; align-items:center; justify-content:space-between; padding:6px 0 10px; }
+    .drawer-title{ font-weight:900; font-size:13px; letter-spacing:-.2px; }
+    .drawer-close{ border:0; background:transparent; font-weight:900; color:var(--muted); cursor:pointer; padding:6px 0; }
+    .drawer-link{
+      display:block;
+      padding:12px 0;
+      border-top:1px solid var(--line2);
+      color:#111;
+      text-decoration:none;
+      font-weight:900;
+      font-size:14px;
+    }
+    .drawer-link:first-of-type{ border-top:1px solid var(--line); }
+
+    /* Pages */
+    main{ display:block; }
+    .page{ display:none; }
+    .page[aria-hidden="false"]{ display:block; }
+
+    .section{ padding: 14px 0; }
+    .section + .section{ border-top: 1px solid var(--line2); }
+    .section-title{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:10px;
+      margin:0;
+      padding: 0;
+    }
+    .section-title h2{
+      margin:0;
+      font-size:13px;
+      font-weight:900;
+      letter-spacing:-.2px;
+    }
+
+    /* Upcoming (toggle list) */
+    .schedule-list{ margin-top: 10px; }
+    details.schedule{ border-top: 1px solid var(--line2); padding: 0; }
+    details.schedule:first-child{ border-top: 1px solid var(--line); }
+    details.schedule > summary{
+      list-style:none;
+      padding: 22px 0;
+      cursor:pointer;
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+    }
+    details.schedule > summary::-webkit-details-marker{ display:none; }
+    .s-title{ margin:0; font-size:14px; font-weight:800; letter-spacing:-.2px; line-height:1.3; }
+    .s-detail{ padding: 0 0 14px 0; color: var(--muted); font-size:13px; line-height:1.65; }
+    .s-detail .row{ display:flex; gap:10px; padding: 6px 0; }
+    .s-detail .k{ width:44px; flex:0 0 auto; color:#777; font-weight:800; }
+    .s-detail .v{ min-width:0; }
+
+    /* Tabs */
+    .tabs{
+      margin-top: 12px;
+      display:flex;
+      gap:14px;
+      overflow:auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width:none;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--line);
+    }
+    .tabs::-webkit-scrollbar{ display:none; }
+    .tab{
+      flex: 0 0 auto;
+      padding: 10px 0;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font-size:13px;
+      font-weight:900;
+      letter-spacing:-.2px;
+      cursor:pointer;
+      border-bottom: 2px solid transparent;
+    }
+    .tab[aria-selected="true"]{ color: var(--text); border-bottom-color: var(--text); }
+    .tab[aria-disabled="true"]{ opacity: .45; cursor: default; }
+
+    /* Search */
+    .search{
+      margin-top: 10px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .search input{
+      width:100%;
+      padding: 10px 0;
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      background: transparent;
+      color: var(--text);
+      outline: none;
+      font-size:14px;
+    }
+    .search input::placeholder{ color:#9a9a9a; }
+    .search input:focus{ border-bottom-color: var(--text); box-shadow: 0 2px 0 0 var(--focus); }
+    .btn{
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font-size:13px;
+      font-weight:900;
+      padding: 10px 0;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+    .btn:active{ transform: translateY(1px); }
+
+    /* FAQ */
+    .faq-category{ display:none; }
+    .faq-category[aria-hidden="false"]{ display:block; }
+
+    .faq-wrap{ margin-top: 20px; }
+    details.faq{ border-top: 1px solid var(--line2); padding: 0; }
+    details.faq:first-child{ border-top: 1px solid var(--line); }
+    details.faq > summary{
+      list-style:none;
+      padding: 14px 0;
+      cursor:pointer;
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+    }
+    details.faq > summary::-webkit-details-marker{ display:none; }
+    .q{ width: 18px; flex: 0 0 auto; font-weight:900; font-size:13px; line-height:1.2; color: var(--text); }
+    .qtext{ min-width:0; font-size:14px; font-weight:800; letter-spacing:-.2px; line-height:1.3; }
+    .chev{ margin-left:auto; opacity:.65; transform: rotate(0deg); transition: transform .15s ease; flex:0 0 auto; margin-top: 2px; }
+    details[open] .chev{ transform: rotate(180deg); }
+    .answer{ padding: 0 0 14px 30px; color: var(--muted); font-size:13px; line-height:1.65; }
+    .answer p{ margin: 0; }
+    .answer a{ color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
+
+    .empty{ padding: 14px 0; color: var(--muted); font-size:13px; border-top: 1px solid var(--line); margin-top: 10px; }
+
+    /* Pagination */
+    .pager{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      padding: 14px 0 0;
+      border-top: 1px solid var(--line2);
+      margin-top: 12px;
+    }
+    .page-btn{
+      border:0;
+      background: transparent;
+      color: var(--muted);
+      font-weight:900;
+      font-size:13px;
+      padding: 6px 2px;
+      cursor:pointer;
+      min-width: 18px;
+    }
+    .page-btn[aria-current="page"]{ color: var(--text); text-decoration: underline; text-underline-offset: 4px; }
+    .page-btn:disabled{ opacity:.35; cursor:not-allowed; }
+    .ellipsis{ color:#8a8a8a; font-weight:900; user-select:none; }
+
+    /* Archive grid (Instagram-like) */
+    .archive-sub{ margin-top:8px; font-size:12px; color:var(--muted); }
+    .archive-grid{ margin-top:12px; display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; }
+    @media (min-width: 420px){ .archive-grid{ grid-template-columns: repeat(4, 1fr); } }
+    .archive-item{ position:relative; width:100%; aspect-ratio: 1 / 1; overflow:hidden; background:#f3f3f3; cursor:pointer; display:block; }
+    .archive-item img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .tag{ position:absolute; right:8px; top:8px; font-size:12px; font-weight:900; color:#111; background:#fff; border:1px solid var(--line2); padding:4px 6px; }
+
+    /* Lightbox */
+    .lb{ position:fixed; inset:0; display:none; z-index:100; }
+    .lb[aria-hidden="false"]{ display:block; }
+    .lb-backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.6); }
+    .lb-panel{
+      position:absolute; left:50%; top:50%;
+      transform:translate(-50%,-50%);
+      width:min(92vw, 720px);
+      background:#fff;
+      padding:12px;
+    }
+    .lb-close{ border:0; background:none; font-weight:900; cursor:pointer; }
+    .lb-body{ margin-top:10px; }
+    .lb-body img{ width:100%; height:auto; display:block; }
+    .lb-body iframe{ width:100%; aspect-ratio:16/9; border:0; }
+
+    footer{ padding: 18px 0 0; color:#8a8a8a; font-size:12px; text-align:center; }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <header>
+      <div class="topbar">
+        <button class="icon-btn" id="menuBtn" type="button" aria-label="메뉴 열기" aria-controls="drawer" aria-expanded="false">
+          <span class="burger" aria-hidden="true"><span></span><span></span><span></span></span>
+        </button>
+        <div class="brand">
+          <h1 id="title">REDOOR INFO.</h1>
+          <p id="subtitle">다가오는 일정 & FAQ</p>
+        </div>
+        <div class="status" id="statusText"></div>
+      </div>
+    </header>
+
+    <!-- Drawer Menu -->
+    <aside class="drawer" id="drawer" aria-hidden="true">
+      <div class="drawer-backdrop" data-close></div>
+      <nav class="drawer-panel" aria-label="메뉴">
+        <div class="drawer-head">
+          <div class="drawer-title">MENU</div>
+          <button class="drawer-close" type="button" data-close aria-label="메뉴 닫기">닫기</button>
+        </div>
+        <a class="drawer-link" href="#home" data-nav>HOME</a>
+        <a class="drawer-link" href="#video" data-nav>영상 아카이빙</a>
+        <a class="drawer-link" href="#photo" data-nav>사진 아카이빙</a>
+      </nav>
+    </aside>
+
+    <main>
+      <!-- ================= HOME PAGE ================= -->
+      <section class="page" data-page="home" aria-hidden="false">
+
+        <section class="section" aria-labelledby="scheduleTitle">
+          <div class="section-title">
+            <h2 id="scheduleTitle">UPCOMING</h2>
+          </div>
+          <div class="schedule-list" id="scheduleList">
+            <details class="schedule">
+              <summary>
+                <p class="s-title">2026 FIRST MUSIC STATION - 고양</p>
+                <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </summary>
+              <div class="s-detail">
+                <div class="row"><div class="k">일시</div><div class="v">2026년 1월 31일(토) 16:50</div></div>
+              </div>
+            </details>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="faqTitle">
+          <div class="section-title">
+            <h2 id="faqTitle">FAQ</h2>
+          </div>
+
+          <div class="search" aria-label="FAQ 전체 검색 영역">
+            <input id="searchInput" type="search" inputmode="search" placeholder="전체 FAQ 검색" aria-label="FAQ 전체 검색" />
+            <button class="btn" id="clearSearchBtn" type="button">초기화</button>
+          </div>
+
+          <div class="tabs" role="tablist" aria-label="FAQ 카테고리" id="tablist">
+            <button class="tab" role="tab" aria-selected="true" data-key="general" type="button">기본</button>
+            <button class="tab" role="tab" aria-selected="false" data-key="behind" type="button">곡</button>
+            <button class="tab" role="tab" aria-selected="false" data-key="festival" type="button">공연</button>
+            <button class="tab" role="tab" aria-selected="false" data-key="door" type="button">문짝</button>
+            <button class="tab" role="tab" aria-selected="false" data-key="etc" type="button">기타</button>
+          </div>
+
+          <div class="faq-wrap" id="faqRoot">
+            <section class="faq-category" data-key="general" aria-hidden="false">
+              <details class="faq">
+                <summary>
+                  <div class="q" aria-hidden="true">Q</div>
+                  <div class="qtext">리도어를 알고 싶습니다.</div>
+                  <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </summary>
+                <div class="answer">
+                  나무위키를 확인하세요.<br>
+                  <a href="https://namu.wiki/w/%EB%A6%AC%EB%8F%84%EC%96%B4" target="_blank" rel="noopener">리도어 나무위키 확인</a>
+                </div>
+              </details>
+            </section>
+
+            <section class="faq-category" data-key="behind" aria-hidden="true">
+              <details class="faq">
+                <summary>
+                  <div class="q" aria-hidden="true">Q</div>
+                  <div class="qtext">왜 세 번을 빙글 도는지에 대해 말해 준 적 있나요?</div>
+                  <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </summary>
+                <div class="answer">말해준 적 없습니다. 사랑의 미학 "난 세 번을 빙글 돌아요" - 세상:소음 "왜 세 번을 빙그르 돌았냐고 물으면 아무 대답도 못할 거예요" 각자 추측해봅시다!</div>
+              </details>
+            </section>
+
+            <section class="faq-category" data-key="festival" aria-hidden="true"><div class="empty">질문을 추가해 주세요.</div></section>
+            <section class="faq-category" data-key="door" aria-hidden="true"><div class="empty">질문을 추가해 주세요.</div></section>
+            <section class="faq-category" data-key="etc" aria-hidden="true"><div class="empty">질문을 추가해 주세요.</div></section>
+          </div>
+
+          <div class="pager" id="pager" aria-label="페이지네이션"></div>
+        </section>
+
+      </section>
+
+      <!-- ================= VIDEO PAGE ================= -->
+      <section class="page" data-page="video" aria-hidden="true">
+        <section class="section">
+          <div class="section-title"><h2>영상 아카이빙</h2></div>
+          <div class="archive-sub">Google Drive 영상 폴더 연동 (자동)</div>
+
+          <!-- 🔹 Google Drive 영상 폴더 연동 영역 -->
+          <div class="archive-grid" id="videoGrid"></div>
+        </section>
+      </section>
+
+      <!-- ================= PHOTO PAGE ================= -->
+      <section class="page" data-page="photo" aria-hidden="true">
+        <section class="section">
+          <div class="section-title"><h2>사진 아카이빙</h2></div>
+          <div class="archive-sub">Google Drive 이미지 폴더 연동 (자동)</div>
+
+          <!-- 🔹 Google Drive 이미지 폴더 연동 영역 -->
+          <div class="archive-grid" id="photoGrid"></div>
+        </section>
+      </section>
+
+    </main>
+
+    <footer>© <span id="year"></span> FAQ</footer>
+  </div>
+
+<!-- Lightbox -->
+<div id="lightbox" style="display:none; position:fixed; inset:0; z-index:9999;">
+  <div id="lbBg"
+       style="position:absolute; inset:0; background:rgba(0,0,0,.7);"></div>
+
+  <div style="
+    position:absolute;
+    left:50%; top:50%;
+    transform:translate(-50%,-50%);
+    width:min(92vw,800px);
+    background:#fff;
+    padding:12px;">
+    <button id="lbClose" style="border:0;background:none;font-weight:700;">
+      닫기
+    </button>
+    <div id="lbContent" style="margin-top:10px;"></div>
+  </div>
+</div>
+
+
+<script>
+(() => {
+  // ===== Expected behavior check =====
+  // When you tap a thumbnail in Video/Photo page, it should open the lightbox.
+  // When you tap outside (backdrop) or press ESC, it should close.
+
+  // ===== Config =====
+  const PAGE_SIZE = 5;
+
+  // ===== Elements =====
+  const statusTextEl = document.getElementById('statusText');
+
+  const menuBtn = document.getElementById('menuBtn');
+  const drawer = document.getElementById('drawer');
+  const pages = [...document.querySelectorAll('.page')];
+
+  const tablistEl = document.getElementById('tablist');
+  const categories = [...document.querySelectorAll('.faq-category')];
+  const pagerEl = document.getElementById('pager');
+  const searchInputEl = document.getElementById('searchInput');
+  const clearSearchBtn = document.getElementById('clearSearchBtn');
+
+  const lb = document.getElementById('lightbox');
+  const lbBody = document.getElementById('lbBody');
+
+  // ===== Drawer =====
+  function openDrawer(){
+    drawer.setAttribute('aria-hidden','false');
+    menuBtn.setAttribute('aria-expanded','true');
+  }
+  function closeDrawer(){
+    drawer.setAttribute('aria-hidden','true');
+    menuBtn.setAttribute('aria-expanded','false');
+  }
+
+  menuBtn.addEventListener('click', () => {
+    const open = drawer.getAttribute('aria-hidden') === 'false';
+    open ? closeDrawer() : openDrawer();
+  });
+
+  drawer.addEventListener('click', (e) => {
+    if (e.target.matches('[data-close]')) closeDrawer();
+    if (e.target.matches('[data-nav]')) closeDrawer();
+  });
+
+  // ===== Router =====
+  function showPage(pageKey){
+    pages.forEach(p => p.setAttribute('aria-hidden', p.dataset.page === pageKey ? 'false' : 'true'));
+    if (pageKey !== 'home') statusTextEl.textContent = '';
+  }
+
+  function route(){
+    const hash = (location.hash || '#home').replace('#','');
+    const pageKey = ['home','video','photo'].includes(hash) ? hash : 'home';
+    showPage(pageKey);
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }
+
+  window.addEventListener('hashchange', route);
+
+  // ===== Lightbox =====
+  function openLightbox(type, src){
+    if (type === 'video'){
+      lbBody.innerHTML = `<iframe src="${src}" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+    } else {
+      lbBody.innerHTML = `<img src="${src}" alt="" />`;
+    }
+    lb.setAttribute('aria-hidden','false');
+  }
+
+  function closeLightbox(){
+    lb.setAttribute('aria-hidden','true');
+    lbBody.innerHTML = '';
+  }
+
+  // ===== Google Drive 연동 설정 =====
+  // 👉 본인 Google Drive에서 '공개'로 설정한 폴더 ID를 넣어주세요
+  const DRIVE = {
+    photoFolderId: '1aSMttxKYkPVmFYWAyVWZskK3ZTerAESf',
+    videoFolderId: '1o9k1LMCZhnUqH7PrSwU0dVV-ljWJ0A01'
+  };
+
+  // 👉 Google Drive 썸네일 + 미리보기 URL 생성
+  function driveThumb(fileId){
+    return `https://drive.google.com/thumbnail?id=${fileId}&sz=w600`;
+  }
+  function drivePreview(fileId){
+    return `https://drive.google.com/file/d/${fileId}/preview`;
+  }
+
+  // 👉 폴더 내 파일 목록 불러오기 (공개 폴더 전용)
+  async function loadDriveFolder(folderId){
+    const url = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents&fields=files(id,name,mimeType)&key=AIzaSyDYqUApnZbrdgl1Lf-AU_fBgso7tPQoS9Q`;
+    const res = await fetch(url);
+    const json = await res.json();
+    return json.files || [];
+  }
+
+  async function initDrive(){
+    try{
+      const photos = await loadDriveFolder(DRIVE.photoFolderId);
+      const photoGrid = document.getElementById('photoGrid');
+      photoGrid.innerHTML = photos
+        .filter(f => f.mimeType.startsWith('image/'))
+        .map(f => `
+          <a class="archive-item" href="#"
+             data-lightbox
+             data-type="image"
+             data-src="${drivePreview(f.id)}">
+            <img src="${driveThumb(f.id)}" alt="${f.name}" />
+          </a>
+        `).join('');
+
+      const videos = await loadDriveFolder(DRIVE.videoFolderId);
+      const videoGrid = document.getElementById('videoGrid');
+      videoGrid.innerHTML = videos
+        .filter(f => f.mimeType.startsWith('video/'))
+        .map(f => `
+          <a class="archive-item" href="#"
+             data-lightbox
+             data-type="video"
+             data-src="${drivePreview(f.id)}">
+            <img src="${driveThumb(f.id)}" alt="${f.name}" />
+            <div class="tag">VIDEO</div>
+          </a>
+        `).join('');
+    }catch(err){
+      console.error('Drive load error', err);
+    }
+  }
+
+  initDrive();
+
+  document.addEventListener('keydown', (e) => {
+    const active = document.activeElement;
+
+    // Enter/Space: open lightbox when focused on an archive item
+    if ((e.key === 'Enter' || e.key === ' ') && active && typeof active.matches === 'function' && active.matches('[data-lightbox]')){
+      e.preventDefault();
+      const type = active.dataset.type;
+      const src = active.dataset.src;
+      if (type && src) openLightbox(type, src);
+      return;
+    }
+
+    // ESC: close drawer or lightbox
+    if (e.key === 'Escape'){
+      if (drawer.getAttribute('aria-hidden') === 'false') closeDrawer();
+      if (lb.getAttribute('aria-hidden') === 'false') closeLightbox();
+    }
+  });
+
+  // ===== FAQ logic =====
+  let activeKey = tablistEl?.querySelector('.tab[aria-selected="true"]')?.dataset.key
+    || tablistEl?.querySelector('.tab')?.dataset.key
+    || '';
+
+  let searchQuery = '';
+  let searchPage = 1;
+  let pageByKey = Object.fromEntries(categories.map(s => [s.dataset.key, 1]));
+
+  function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
+
+  function buildPager(current, total){
+    const items = [];
+    if (total <= 1) return items;
+
+    const push = (type, value) => items.push({ type, value });
+    const showRange = (start, end) => { for (let i=start; i<=end; i++) push('page', i); };
+
+    push('prev', Math.max(1, current-1));
+
+    if (total <= 7){
+      showRange(1, total);
+    } else {
+      showRange(1, 2);
+      const left = clamp(current - 1, 3, total-2);
+      const right = clamp(current + 1, 3, total-2);
+      if (left > 3) push('ellipsis');
+      showRange(left, right);
+      if (right < total - 2) push('ellipsis');
+      showRange(total-1, total);
+    }
+
+    push('next', Math.min(total, current+1));
+    return items;
+  }
+
+  function setTabsDisabled(disabled){
+    tablistEl?.querySelectorAll('.tab').forEach(btn => {
+      btn.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+    });
+  }
+
+  function showCategory(key){
+    categories.forEach(sec => {
+      sec.setAttribute('aria-hidden', sec.dataset.key === key ? 'false' : 'true');
+    });
+  }
+
+  function setActiveTab(key){
+    tablistEl?.querySelectorAll('.tab').forEach(btn => {
+      const sel = btn.dataset.key === key;
+      btn.setAttribute('aria-selected', sel ? 'true' : 'false');
+      btn.tabIndex = sel ? 0 : -1;
+    });
+  }
+
+  function getVisibleFaqItems(){
+    if (searchQuery.trim()){
+      const q = searchQuery.trim().toLowerCase();
+      const all = [...document.querySelectorAll('.faq-category details.faq')];
+      return all.filter(d => d.textContent.toLowerCase().includes(q));
+    }
+    const sec = categories.find(s => s.dataset.key === activeKey);
+    return sec ? [...sec.querySelectorAll('details.faq')] : [];
+  }
+
+  function ensureEmptyState(section, visibleCount){
+    const empty = section.querySelector(':scope > .empty');
+    if (empty) empty.style.display = visibleCount ? 'none' : 'block';
+  }
+
+  function renderPager(current, total){
+    const items = buildPager(current, total);
+    if (!items.length){
+      pagerEl.innerHTML = '';
+      return;
+    }
+
+    pagerEl.innerHTML = items.map(it => {
+      if (it.type === 'ellipsis') return `<span class="ellipsis" aria-hidden="true">•••</span>`;
+      if (it.type === 'prev') return `<button class="page-btn" type="button" ${current===1 ? 'disabled':''} aria-label="이전" data-page="${it.value}">이전</button>`;
+      if (it.type === 'next') return `<button class="page-btn" type="button" ${current===total ? 'disabled':''} aria-label="다음" data-page="${it.value}">다음</button>`;
+      const isCurrent = it.value === current;
+      return `<button class="page-btn" type="button" aria-label="${it.value}페이지" data-page="${it.value}" ${isCurrent ? 'aria-current="page"':''}>${it.value}</button>`;
+    }).join('');
+
+    pagerEl.onclick = (e) => {
+      const btn = e.target.closest('.page-btn');
+      if (!btn || btn.disabled) return;
+      const nextPage = Number(btn.dataset.page);
+      if (searchQuery.trim()) searchPage = nextPage;
+      else pageByKey[activeKey] = nextPage;
+      document.getElementById('faqTitle').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      paginateAndRender();
+    };
+  }
+
+  function paginateAndRender(){
+    const items = getVisibleFaqItems();
+    const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+
+    const current = searchQuery.trim()
+      ? clamp(searchPage, 1, totalPages)
+      : clamp(pageByKey[activeKey] || 1, 1, totalPages);
+
+    if (searchQuery.trim()) searchPage = current;
+    else pageByKey[activeKey] = current;
+
+    document.querySelectorAll('.faq-category details.faq').forEach(d => d.style.display = 'none');
+
+    if (searchQuery.trim()){
+      categories.forEach(sec => sec.setAttribute('aria-hidden','false'));
+    } else {
+      showCategory(activeKey);
+    }
+
+    const start = (current - 1) * PAGE_SIZE;
+    const pageItems = items.slice(start, start + PAGE_SIZE);
+    pageItems.forEach(d => d.style.display = '');
+
+    if (searchQuery.trim()){
+      categories.forEach(sec => {
+        const visibleInSection = [...sec.querySelectorAll('details.faq')].some(d => d.style.display !== 'none');
+        ensureEmptyState(sec, visibleInSection ? 1 : 0);
+      });
+      statusTextEl.textContent = `전체 검색 결과: ${items.length}개`;
+    } else {
+      const sec = categories.find(s => s.dataset.key === activeKey);
+      if (sec) ensureEmptyState(sec, pageItems.length);
+      statusTextEl.textContent = '';
+    }
+
+    renderPager(current, totalPages);
+  }
+
+  tablistEl?.addEventListener('click', (e) => {
+    const btn = e.target.closest('.tab');
+    if (!btn) return;
+    if (btn.getAttribute('aria-disabled') === 'true') return;
+
+    activeKey = btn.dataset.key;
+    setActiveTab(activeKey);
+    pageByKey[activeKey] = 1;
+    paginateAndRender();
+  });
+
+  searchInputEl?.addEventListener('input', (e) => {
+    searchQuery = e.target.value || '';
+    searchPage = 1;
+    setTabsDisabled(!!searchQuery.trim());
+    paginateAndRender();
+  });
+
+  clearSearchBtn?.addEventListener('click', () => {
+    searchQuery = '';
+    searchInputEl.value = '';
+    searchPage = 1;
+    setTabsDisabled(false);
+    categories.forEach(sec => sec.setAttribute('aria-hidden', sec.dataset.key === activeKey ? 'false' : 'true'));
+    paginateAndRender();
+    searchInputEl.focus();
+  });
+
+  // ===== Boot =====
+  document.getElementById('year').textContent = String(new Date().getFullYear());
+
+  // Initial view
+  setActiveTab(activeKey);
+  showCategory(activeKey);
+  setTabsDisabled(false);
+  paginateAndRender();
+  route();
+
+  // ===== Tests (?test=1) =====
+  function runTests(){
+    console.assert(document.querySelectorAll('.page').length === 3, 'TEST: should have 3 pages');
+    console.assert(document.querySelectorAll('.drawer-link').length >= 3, 'TEST: drawer links exist');
+    console.assert(document.querySelectorAll('[data-lightbox]').length >= 2, 'TEST: archive items exist');
+    console.assert(typeof PAGE_SIZE === 'number' && PAGE_SIZE >= 1, 'TEST: PAGE_SIZE valid');
+    console.assert(document.getElementById('lightbox') && document.getElementById('lbBody'), 'TEST: lightbox elements exist');
+    console.log('All tests passed');
+  }
+  if (new URLSearchParams(location.search).get('test') === '1') runTests();
+})();
+
+<script>
+const lb = document.getElementById('lightbox');
+const lbContent = document.getElementById('lbContent');
+
+function openLightbox(type, src){
+  if (type === 'video'){
+    lbContent.innerHTML = `
+      <iframe src="${src}"
+              style="width:100%;aspect-ratio:16/9;border:0;"
+              allowfullscreen></iframe>`;
+  } else {
+    lbContent.innerHTML = `
+      <img src="${src}" style="width:100%;height:auto;" />`;
+  }
+  lb.style.display = 'block';
+}
+
+function closeLightbox(){
+  lb.style.display = 'none';
+  lbContent.innerHTML = '';
+}
+
+document.getElementById('lbBg').onclick = closeLightbox;
+document.getElementById('lbClose').onclick = closeLightbox;
+</script>
+</body>
+</html>
