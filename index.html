@@ -151,7 +151,7 @@
     .s-detail .k{ width:44px; flex:0 0 auto; color:#777; font-weight:800; }
     .s-detail .v{ min-width:0; }
 
-    /* Tabs */
+    /* Tabs (base) */
     .tabs{
       margin-top: 12px;
       display:flex;
@@ -177,6 +177,20 @@
     }
     .tab[aria-selected="true"]{ color: var(--text); border-bottom-color: var(--text); }
     .tab[aria-disabled="true"]{ opacity: .45; cursor: default; }
+
+    /* Photo category tabs - equal width */
+    #photoTabs{
+      display:flex;
+      gap:0;
+      overflow:hidden;
+      border-bottom:1px solid var(--line);
+      padding-bottom: 0;
+    }
+    #photoTabs .tab{
+      flex:1 1 0;
+      text-align:center;
+      padding:12px 0;
+    }
 
     /* Search */
     .search{
@@ -279,21 +293,31 @@
     .archive-item img{ width:100%; height:100%; object-fit:cover; display:block; }
     .tag{ position:absolute; right:8px; top:8px; font-size:12px; font-weight:900; color:#111; background:#fff; border:1px solid var(--line2); padding:4px 6px; }
 
-    /* Photo category tabs - equal width */
-#photoTabs{
-  display: flex;
-  gap: 0;                 /* 간격 제거 */
-  overflow: hidden;       /* 스크롤 제거 */
-  border-bottom: 1px solid var(--line);
-}
-
-#photoTabs .tab{
-  flex: 1 1 0;            /* ✅ 각 탭 동일 너비 */
-  text-align: center;
-  padding: 12px 0;
-  font-size: 13px;
-}
-
+    /* C6: folder carousel groups */
+    #photoC6Wrap{ margin-top: 12px; }
+    .c6-group{ padding: 12px 0; border-top:1px solid var(--line2); }
+    .c6-title{ margin:0 0 10px; font-weight:900; font-size:13px; letter-spacing:-.2px; }
+    .c6-rail{
+      display:flex;
+      gap:10px;
+      overflow-x:auto;
+      -webkit-overflow-scrolling: touch;
+      scroll-snap-type:x mandatory;
+      padding-bottom: 4px;
+    }
+    .c6-rail::-webkit-scrollbar{ display:none; }
+    .c6-item{
+      flex: 0 0 auto;
+      width: 140px;
+      aspect-ratio: 1 / 1;
+      background:#f3f3f3;
+      overflow:hidden;
+      scroll-snap-align:start;
+      display:block;
+      text-decoration:none;
+      color:inherit;
+    }
+    .c6-item img{ width:100%; height:100%; object-fit:cover; display:block; }
 
     footer{ padding: 18px 0 0; color:#8a8a8a; font-size:12px; text-align:center; }
   </style>
@@ -440,7 +464,8 @@
           <div class="archive-grid" id="photoGrid-c3" aria-hidden="true" style="display:none"></div>
           <div class="archive-grid" id="photoGrid-c4" aria-hidden="true" style="display:none"></div>
           <div class="archive-grid" id="photoGrid-c5" aria-hidden="true" style="display:none"></div>
-          <div class="archive-grid" id="photoGrid-c6" aria-hidden="true" style="display:none"></div>
+          <div id="photoC6Wrap" aria-hidden="true" style="display:none"></div>
+
         </section>
       </section>
 
@@ -469,6 +494,7 @@
 
   // Photo tabs
   const photoTabs = document.getElementById('photoTabs');
+  const photoC6Wrap = document.getElementById('photoC6Wrap');
 
   // Drive note elements
   const driveNotePhoto = document.getElementById('driveNotePhoto');
@@ -510,8 +536,6 @@
   window.addEventListener('hashchange', route);
 
   // ===== Google Drive =====
-  // NOTE: 로컬에서 file:// 로 열면(더블클릭) 일부 환경에서 오류가 날 수 있어요.
-  // 가능하면 로컬 서버(http://localhost) 또는 Vercel 주소에서 테스트하세요.
   const DRIVE = {
     photoFolders: [
       { key: 'c1', label: 'C1', folderId: '1AcOrowONBy2JPyXrd4mCR8x0khc-azDu' },
@@ -519,7 +543,14 @@
       { key: 'c3', label: 'C3', folderId: '10kBeYbZ7IOQisOV2eusZDUyPgryx4rP8' },
       { key: 'c4', label: 'C4', folderId: '1ulyv1QjgTILa2xZa3PAvKsJX7C7trLkl' },
       { key: 'c5', label: 'C5', folderId: '1PYVCSpXK_dDE1tVfQCAd3Ma-L9DTMd43' },
-      { key: 'c6', label: 'C6', folderId: '16jor_cyXurWmfniWlLOLGKp8YHt8f3jh' },
+      // ✅ C6는 여러 폴더(폴더ID는 전부 실제 값으로 채워야 함)
+      { key: 'c6', label: 'C6', folderIds: [
+        '18UBu-bdqQQw5heQ2KJ9S8xKr6Jvz9a2L',
+        '1y-ObpiDB5ptLvBj1IEBFwonrajA1fCrX',
+        // TODO: 아래 2개는 반드시 실제 폴더ID로 교체하세요
+        'C6_폴더ID_3',
+        'C6_폴더ID_4'
+      ] }
     ],
     videoFolderId: '1o9k1LMCZhnUqH7PrSwU0dVV-ljWJ0A01',
     apiKey: 'AIzaSyDYqUApnZbrdgl1Lf-AU_fBgso7tPQoS9Q'
@@ -566,30 +597,115 @@ API URL: ${url}`;
     return json.files || [];
   }
 
+  async function getDriveName(fileId){
+    const url = `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?` +
+      `fields=name&supportsAllDrives=true&key=${encodeURIComponent(DRIVE.apiKey)}`;
+
+    const res = await fetch(url);
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok || json.error) return '';
+    return json.name || '';
+  }
+
+  let c6Loaded = false;
+
+  async function renderC6Carousel(){
+    if (!photoC6Wrap) return;
+
+    const c6 = DRIVE.photoFolders.find(x => x.key === 'c6');
+    const folderIds = c6?.folderIds || [];
+
+    // placeholder가 남아있으면 실패할 수 있으니 안내
+    const hasPlaceholder = folderIds.some(x => String(x).includes('폴더ID'));
+
+    if (!folderIds.length){
+      photoC6Wrap.innerHTML = `<div class="empty">C6 폴더가 비어있습니다.</div>`;
+      c6Loaded = true;
+      return;
+    }
+
+    photoC6Wrap.innerHTML = `<div class="empty">불러오는 중…</div>`;
+
+    const results = await Promise.allSettled(folderIds.map(async (fid) => {
+      const [name, files] = await Promise.all([
+        getDriveName(fid),
+        loadDriveFolder(fid),
+      ]);
+      const images = (files || []).filter(f => (f.mimeType||'').startsWith('image/'));
+      return { folderId: fid, name: name || 'Untitled', images };
+    }));
+
+    const head = hasPlaceholder
+      ? `<div class="note"><strong>주의:</strong> C6 폴더ID에 placeholder(예: <span class="mono">C6_폴더ID_3</span>)가 남아있으면 해당 묶음은 실패합니다.</div>`
+      : '';
+
+    const body = results.map((r, idx) => {
+      if (r.status === 'rejected'){
+        return `
+          <div class="c6-group">
+            <p class="c6-title">폴더 ${idx+1}</p>
+            <div class="empty">불러오기 실패</div>
+          </div>
+        `;
+      }
+
+      const { name, images } = r.value;
+      const items = images.map(f => `
+        <a class="c6-item" href="${driveOpenFile(f.id)}" target="_blank" rel="noopener">
+          <img src="${driveThumb(f.id)}" alt="${f.name}" loading="lazy">
+        </a>
+      `).join('');
+
+      return `
+        <div class="c6-group">
+          <p class="c6-title">${name}</p>
+          <div class="c6-rail">${items || '<div class="empty">사진이 없습니다.</div>'}</div>
+        </div>
+      `;
+    }).join('');
+
+    photoC6Wrap.innerHTML = head + body;
+    c6Loaded = true;
+  }
+
   function setActivePhotoTab(key){
     // tab aria
     photoTabs?.querySelectorAll('.tab').forEach(t => {
       t.setAttribute('aria-selected', t.dataset.photo === key ? 'true' : 'false');
     });
 
-    // grid toggle
+    // c1~c5 grid toggle
     DRIVE.photoFolders.forEach(c => {
+      if (c.key === 'c6') return;
       const grid = document.getElementById(`photoGrid-${c.key}`);
       if (!grid) return;
       const show = c.key === key;
       grid.style.display = show ? '' : 'none';
       grid.setAttribute('aria-hidden', show ? 'false' : 'true');
     });
+
+    // c6 wrap toggle
+    if (photoC6Wrap){
+      const show = (key === 'c6');
+      photoC6Wrap.style.display = show ? '' : 'none';
+      photoC6Wrap.setAttribute('aria-hidden', show ? 'false' : 'true');
+      if (show && !c6Loaded){
+        // 탭 눌렀을 때 lazy load
+        renderC6Carousel().catch(console.error);
+      }
+    }
   }
 
   async function initDrive(){
     const videoGrid = document.getElementById('videoGrid');
 
-    // 로딩 표시
+    // 로딩 표시 (c1~c5)
     DRIVE.photoFolders.forEach(c => {
+      if (c.key === 'c6') return;
       const grid = document.getElementById(`photoGrid-${c.key}`);
       if (grid) grid.innerHTML = `<div class="empty">불러오는 중…</div>`;
     });
+    if (photoC6Wrap) photoC6Wrap.innerHTML = `<div class="empty">C6 탭에서 불러옵니다.</div>`;
     if (videoGrid) videoGrid.innerHTML = `<div class="empty">불러오는 중…</div>`;
 
     // file:// 경고
@@ -606,19 +722,27 @@ API URL: ${url}`;
     }
 
     try{
-      // ✅ Photos by 6 folders
-      const results = await Promise.all(
-        DRIVE.photoFolders.map(async (c) => {
+      // ✅ Photos (c1~c5) — 실패해도 다른 건 계속
+      const photoBases = DRIVE.photoFolders.filter(x => x.key !== 'c6');
+      const results = await Promise.allSettled(
+        photoBases.map(async (c) => {
           const files = await loadDriveFolder(c.folderId);
           return { ...c, files };
         })
       );
 
-      results.forEach(({ key, files }) => {
-        const grid = document.getElementById(`photoGrid-${key}`);
+      results.forEach((r, idx) => {
+        const meta = photoBases[idx];
+        const grid = document.getElementById(`photoGrid-${meta.key}`);
         if (!grid) return;
 
-        const html = files
+        if (r.status === 'rejected'){
+          grid.innerHTML = `<div class="empty">불러오기 실패 (폴더 공개/ID 확인)</div>`;
+          return;
+        }
+
+        const { files } = r.value;
+        const html = (files || [])
           .filter(f => (f.mimeType || '').startsWith('image/'))
           .map(f => `
             <a class="archive-item"
@@ -633,13 +757,10 @@ API URL: ${url}`;
         grid.innerHTML = html || `<div class="empty">사진이 없습니다.</div>`;
       });
 
-      // 기본 탭은 c1
-      setActivePhotoTab('c1');
-
       // ✅ Videos (single folder)
       const videos = await loadDriveFolder(DRIVE.videoFolderId);
       if (videoGrid){
-        const html = videos
+        const html = (videos || [])
           .filter(f => (f.mimeType || '').startsWith('video/'))
           .map(f => `
             <a class="archive-item"
@@ -654,13 +775,17 @@ API URL: ${url}`;
         videoGrid.innerHTML = html || `<div class="empty">영상이 없습니다.</div>`;
       }
 
+      // 기본 탭은 c1
+      setActivePhotoTab('c1');
+
     } catch (err){
       console.error('Drive load error', err);
       const msg = (err && err.message) ? err.message : 'Drive load error';
       const safe = msg.replaceAll('<','&lt;').replaceAll('>','&gt;');
 
-      // photo error
+      // photo error (c1~c5)
       DRIVE.photoFolders.forEach(c => {
+        if (c.key === 'c6') return;
         const grid = document.getElementById(`photoGrid-${c.key}`);
         if (grid) grid.innerHTML = `<div class="empty">Drive 연동 실패</div>`;
       });
@@ -693,7 +818,7 @@ API URL: ${url}`;
   let searchPage = 1;
   let pageByKey = Object.fromEntries(categories.map(s => [s.dataset.key, 1]));
 
-  function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
+  const clamp = (n,min,max) => Math.max(min, Math.min(max, n));
 
   function buildPager(current, total){
     const items = [];
