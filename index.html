@@ -122,7 +122,17 @@
       letter-spacing:-.2px;
     }
 
-    /* Upcoming (toggle list) */
+    .note{
+      margin-top:10px;
+      padding:10px 0;
+      font-size:12px;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+    }
+    .note strong{ color: var(--text); }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+
+    /* Upcoming */
     .schedule-list{ margin-top: 10px; }
     details.schedule{ border-top: 1px solid var(--line2); padding: 0; }
     details.schedule:first-child{ border-top: 1px solid var(--line); }
@@ -249,29 +259,25 @@
     .page-btn:disabled{ opacity:.35; cursor:not-allowed; }
     .ellipsis{ color:#8a8a8a; font-weight:900; user-select:none; }
 
-    /* Archive grid (Instagram-like) */
+    /* Archive grid */
     .archive-sub{ margin-top:8px; font-size:12px; color:var(--muted); }
     .archive-grid{ margin-top:12px; display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; }
     @media (min-width: 420px){ .archive-grid{ grid-template-columns: repeat(4, 1fr); } }
-    .archive-item{ position:relative; width:100%; aspect-ratio: 1 / 1; overflow:hidden; background:#f3f3f3; cursor:pointer; display:block; }
+    .archive-item{
+      position:relative;
+      width:100%;
+      aspect-ratio: 1 / 1;
+      overflow:hidden;
+      background:#f3f3f3;
+      cursor:pointer;
+      display:block;
+      border:0;
+      padding:0;
+      text-decoration:none;
+      color:inherit;
+    }
     .archive-item img{ width:100%; height:100%; object-fit:cover; display:block; }
     .tag{ position:absolute; right:8px; top:8px; font-size:12px; font-weight:900; color:#111; background:#fff; border:1px solid var(--line2); padding:4px 6px; }
-
-    /* Lightbox */
-    .lb{ position:fixed; inset:0; display:none; z-index:100; }
-    .lb[aria-hidden="false"]{ display:block; }
-    .lb-backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.6); }
-    .lb-panel{
-      position:absolute; left:50%; top:50%;
-      transform:translate(-50%,-50%);
-      width:min(92vw, 720px);
-      background:#fff;
-      padding:12px;
-    }
-    .lb-close{ border:0; background:none; font-weight:900; cursor:pointer; }
-    .lb-body{ margin-top:10px; }
-    .lb-body img{ width:100%; height:auto; display:block; }
-    .lb-body iframe{ width:100%; aspect-ratio:16/9; border:0; }
 
     footer{ padding: 18px 0 0; color:#8a8a8a; font-size:12px; text-align:center; }
   </style>
@@ -392,8 +398,7 @@
         <section class="section">
           <div class="section-title"><h2>영상 아카이빙</h2></div>
           <div class="archive-sub">Google Drive 영상 폴더 연동 (자동)</div>
-
-          <!-- 🔹 Google Drive 영상 폴더 연동 영역 -->
+          <div id="driveNoteVideo" class="note" hidden></div>
           <div class="archive-grid" id="videoGrid"></div>
         </section>
       </section>
@@ -403,8 +408,7 @@
         <section class="section">
           <div class="section-title"><h2>사진 아카이빙</h2></div>
           <div class="archive-sub">Google Drive 이미지 폴더 연동 (자동)</div>
-
-          <!-- 🔹 Google Drive 이미지 폴더 연동 영역 -->
+          <div id="driveNotePhoto" class="note" hidden></div>
           <div class="archive-grid" id="photoGrid"></div>
         </section>
       </section>
@@ -414,21 +418,8 @@
     <footer>© <span id="year"></span> FAQ</footer>
   </div>
 
-  <!-- ===== Lightbox (Image / Video) ===== -->
-  <div id="lightbox" class="lb" aria-hidden="true">
-    <div class="lb-backdrop" data-close></div>
-    <div class="lb-panel" role="dialog" aria-modal="true" aria-label="미리보기">
-      <button class="lb-close" type="button" data-close>닫기</button>
-      <div class="lb-body" id="lbBody"></div>
-    </div>
-  </div>
-
 <script>
 (() => {
-  // ===== Expected behavior check =====
-  // When you tap a thumbnail in Video/Photo page, it should open the lightbox.
-  // When you tap outside (backdrop) or press ESC, it should close.
-
   // ===== Config =====
   const PAGE_SIZE = 5;
 
@@ -445,8 +436,9 @@
   const searchInputEl = document.getElementById('searchInput');
   const clearSearchBtn = document.getElementById('clearSearchBtn');
 
-  const lb = document.getElementById('lightbox');
-  const lbBody = document.getElementById('lbBody');
+  // Drive note elements
+  const driveNotePhoto = document.getElementById('driveNotePhoto');
+  const driveNoteVideo = document.getElementById('driveNoteVideo');
 
   // ===== Drawer =====
   function openDrawer(){
@@ -483,97 +475,127 @@
 
   window.addEventListener('hashchange', route);
 
-  // ===== Lightbox =====
-  function openLightbox(type, src){
-    if (type === 'video'){
-      lbBody.innerHTML = `<iframe src="${src}" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
-    } else {
-      lbBody.innerHTML = `<img src="${src}" alt="" />`;
-    }
-    lb.setAttribute('aria-hidden','false');
-  }
-
-  function closeLightbox(){
-    lb.setAttribute('aria-hidden','true');
-    lbBody.innerHTML = '';
-  }
-
-  // ===== Google Drive 연동 설정 =====
-  // 👉 본인 Google Drive에서 '공개'로 설정한 폴더 ID를 넣어주세요
+  // ===== Google Drive =====
+  // NOTE: 로컬에서 file:// 로 열면(더블클릭) 일부 환경에서 오류가 날 수 있어요.
+  // 가능하면 로컬 서버(http://localhost) 또는 Vercel 주소에서 테스트하세요.
   const DRIVE = {
     photoFolderId: '1aSMttxKYkPVmFYWAyVWZskK3ZTerAESf',
-    videoFolderId: '1o9k1LMCZhnUqH7PrSwU0dVV-ljWJ0A01'
+    videoFolderId: '1o9k1LMCZhnUqH7PrSwU0dVV-ljWJ0A01',
+    apiKey: 'AIzaSyDYqUApnZbrdgl1Lf-AU_fBgso7tPQoS9Q'
   };
 
-  // 👉 Google Drive 썸네일 + 미리보기 URL 생성
   function driveThumb(fileId){
     return `https://drive.google.com/thumbnail?id=${fileId}&sz=w600`;
   }
-  function drivePreview(fileId){
-    return `https://drive.google.com/file/d/${fileId}/preview`;
+  function driveOpenFile(fileId){
+    return `https://drive.google.com/file/d/${fileId}/view`;
   }
 
-  // 👉 폴더 내 파일 목록 불러오기 (공개 폴더 전용)
+  function showDriveNote(el, html){
+    if (!el) return;
+    el.hidden = false;
+    el.innerHTML = html;
+  }
+  function hideDriveNote(el){
+    if (!el) return;
+    el.hidden = true;
+    el.innerHTML = '';
+  }
+
   async function loadDriveFolder(folderId){
-    const url = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents&fields=files(id,name,mimeType)&key=AIzaSyDYqUApnZbrdgl1Lf-AU_fBgso7tPQoS9Q`;
+    const q = `'${folderId}' in parents and trashed=false`;
+
+    const url = `https://www.googleapis.com/drive/v3/files?` +
+      `q=${encodeURIComponent(q)}` +
+      `&pageSize=1000` +
+      `&fields=files(id,name,mimeType,createdTime)` +
+      `&orderBy=createdTime desc` +
+      `&includeItemsFromAllDrives=true&supportsAllDrives=true` +
+      `&key=${encodeURIComponent(DRIVE.apiKey)}`;
+
     const res = await fetch(url);
-    const json = await res.json();
+    const json = await res.json().catch(() => ({}));
+
+    if (!res.ok || json.error){
+      const msg = json?.error?.message || `HTTP ${res.status}`;
+      const hint = `
+API URL: ${url}`;
+      throw new Error(msg + hint);
+    }
     return json.files || [];
   }
 
   async function initDrive(){
+    const photoGrid = document.getElementById('photoGrid');
+    const videoGrid = document.getElementById('videoGrid');
+
+    if (photoGrid) photoGrid.innerHTML = `<div class="empty">불러오는 중…</div>`;
+    if (videoGrid) videoGrid.innerHTML = `<div class="empty">불러오는 중…</div>`;
+
+    // file:// 경고
+    if (location.protocol === 'file:'){
+      const msg = `
+        <div><strong>주의:</strong> 지금은 <span class="mono">file://</span> 로 열려있습니다.</div>
+        <div>Drive API가 막히거나 오동작할 수 있어요. 로컬 서버(<span class="mono">http://localhost</span>) 또는 Vercel 주소에서 테스트해 주세요.</div>
+      `;
+      showDriveNote(driveNotePhoto, msg);
+      showDriveNote(driveNoteVideo, msg);
+    } else {
+      hideDriveNote(driveNotePhoto);
+      hideDriveNote(driveNoteVideo);
+    }
+
     try{
       const photos = await loadDriveFolder(DRIVE.photoFolderId);
-      const photoGrid = document.getElementById('photoGrid');
-      photoGrid.innerHTML = photos
-        .filter(f => f.mimeType.startsWith('image/'))
-        .map(f => `
-          <a class="archive-item" href="#"
-             data-lightbox
-             data-type="image"
-             data-src="${drivePreview(f.id)}">
-            <img src="${driveThumb(f.id)}" alt="${f.name}" />
-          </a>
-        `).join('');
+      if (photoGrid){
+        const html = photos
+          .filter(f => (f.mimeType || '').startsWith('image/'))
+          .map(f => `
+            <a class="archive-item"
+              href="${driveOpenFile(f.id)}"
+              target="_blank"
+              rel="noopener"
+              aria-label="Drive에서 사진 열기">
+              <img src="${driveThumb(f.id)}" alt="${f.name}" loading="lazy" />
+            </a>
+          `).join('');
+        photoGrid.innerHTML = html || `<div class="empty">사진이 없습니다.</div>`;
+      }
 
       const videos = await loadDriveFolder(DRIVE.videoFolderId);
-      const videoGrid = document.getElementById('videoGrid');
-      videoGrid.innerHTML = videos
-        .filter(f => f.mimeType.startsWith('video/'))
-        .map(f => `
-          <a class="archive-item" href="#"
-             data-lightbox
-             data-type="video"
-             data-src="${drivePreview(f.id)}">
-            <img src="${driveThumb(f.id)}" alt="${f.name}" />
-            <div class="tag">VIDEO</div>
-          </a>
-        `).join('');
-    }catch(err){
+      if (videoGrid){
+        const html = videos
+          .filter(f => (f.mimeType || '').startsWith('video/'))
+          .map(f => `
+            <a class="archive-item"
+              href="${driveOpenFile(f.id)}"
+              target="_blank"
+              rel="noopener"
+              aria-label="Drive에서 영상 열기">
+              <img src="${driveThumb(f.id)}" alt="${f.name}" loading="lazy" />
+              <div class="tag">VIDEO</div>
+            </a>
+          `).join('');
+        videoGrid.innerHTML = html || `<div class="empty">영상이 없습니다.</div>`;
+      }
+
+    } catch (err){
       console.error('Drive load error', err);
+      const msg = (err && err.message) ? err.message : 'Drive load error';
+      const safe = msg.replaceAll('<','&lt;').replaceAll('>','&gt;');
+
+      const detail = `<div class="empty">Drive 연동 실패</div>`;
+      if (photoGrid) photoGrid.innerHTML = detail;
+      if (videoGrid) videoGrid.innerHTML = detail;
+
+      const noteHtml = `
+        <div><strong>에러 메시지:</strong></div>
+        <div class="mono" style="white-space:pre-wrap; word-break:break-word;">${safe}</div>
+      `;
+      showDriveNote(driveNotePhoto, noteHtml);
+      showDriveNote(driveNoteVideo, noteHtml);
     }
   }
-
-  initDrive();
-
-  document.addEventListener('keydown', (e) => {
-    const active = document.activeElement;
-
-    // Enter/Space: open lightbox when focused on an archive item
-    if ((e.key === 'Enter' || e.key === ' ') && active && typeof active.matches === 'function' && active.matches('[data-lightbox]')){
-      e.preventDefault();
-      const type = active.dataset.type;
-      const src = active.dataset.src;
-      if (type && src) openLightbox(type, src);
-      return;
-    }
-
-    // ESC: close drawer or lightbox
-    if (e.key === 'Escape'){
-      if (drawer.getAttribute('aria-hidden') === 'false') closeDrawer();
-      if (lb.getAttribute('aria-hidden') === 'false') closeLightbox();
-    }
-  });
 
   // ===== FAQ logic =====
   let activeKey = tablistEl?.querySelector('.tab[aria-selected="true"]')?.dataset.key
@@ -741,20 +763,21 @@
   // ===== Boot =====
   document.getElementById('year').textContent = String(new Date().getFullYear());
 
-  // Initial view
   setActiveTab(activeKey);
   showCategory(activeKey);
   setTabsDisabled(false);
   paginateAndRender();
   route();
 
+  // Drive 연동 시작
+  initDrive();
+
   // ===== Tests (?test=1) =====
   function runTests(){
     console.assert(document.querySelectorAll('.page').length === 3, 'TEST: should have 3 pages');
-    console.assert(document.querySelectorAll('.drawer-link').length >= 3, 'TEST: drawer links exist');
-    console.assert(document.querySelectorAll('[data-lightbox]').length >= 2, 'TEST: archive items exist');
-    console.assert(typeof PAGE_SIZE === 'number' && PAGE_SIZE >= 1, 'TEST: PAGE_SIZE valid');
-    console.assert(document.getElementById('lightbox') && document.getElementById('lbBody'), 'TEST: lightbox elements exist');
+    console.assert(typeof DRIVE.apiKey === 'string' && DRIVE.apiKey.length > 10, 'TEST: apiKey should look non-empty');
+    console.assert(typeof DRIVE.photoFolderId === 'string' && DRIVE.photoFolderId.length > 5, 'TEST: photoFolderId should look non-empty');
+    console.assert(typeof DRIVE.videoFolderId === 'string' && DRIVE.videoFolderId.length > 5, 'TEST: videoFolderId should look non-empty');
     console.log('All tests passed');
   }
   if (new URLSearchParams(location.search).get('test') === '1') runTests();
