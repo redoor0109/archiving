@@ -1,998 +1,292 @@
-<!doctype html>
-<html lang="ko">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#ffffff" />
-  <title>REDOOR INFO.</title>
-  <style>
-    :root{
-      --bg:#fff;
-      --text:#111;
-      --muted:#666;
-      --line: rgba(0,0,0,.12);
-      --line2: rgba(0,0,0,.08);
-      --focus: rgba(0,0,0,.14);
-    }
-    *{ box-sizing:border-box; }
-    html,body{ height:100%; }
-    body{
-      margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Apple SD Gothic Neo, Noto Sans KR, Helvetica, Arial;
-      background: var(--bg);
-      color: var(--text);
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .app{
-      max-width: 720px;
-      margin: 0 auto;
-      padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom) 26px;
-    }
-
-    header{
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      background: rgba(255,255,255,.96);
-      backdrop-filter: blur(8px);
-    }
-    .topbar{
-      display:flex;
-      align-items:baseline;
-      justify-content:space-between;
-      gap:12px;
-      padding: 14px 0 12px;
-    }
-
-    .icon-btn{
-      border:0;
-      background:transparent;
-      padding:8px;
-      margin-left:-8px;
-      cursor:pointer;
-      color:var(--text);
-    }
-    .burger{ width:20px; display:grid; gap:4px; }
-    .burger span{ height:2px; background:#111; display:block; }
-
-    .brand{ min-width:0; }
-    .brand h1{
-      margin:0;
-      font-size:16px;
-      font-weight:900;
-      letter-spacing:-.3px;
-      line-height:1.15;
-    }
-    .brand p{
-      margin:6px 0 0;
-      font-size:12px;
-      color: var(--muted);
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-    .status{ font-size:12px; color: var(--muted); white-space:nowrap; }
-
-    /* Drawer */
-    .drawer{ position:fixed; inset:0; display:none; z-index:50; }
-    .drawer[aria-hidden="false"]{ display:block; }
-    .drawer-backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.45); }
-    .drawer-panel{
-      position:absolute; top:0; left:0;
-      width:min(82vw, 320px);
-      height:100%;
-      background:#fff;
-      border-right:1px solid var(--line2);
-      padding:14px 16px;
-    }
-    .drawer-head{ display:flex; align-items:center; justify-content:space-between; padding:6px 0 10px; }
-    .drawer-title{ font-weight:900; font-size:13px; letter-spacing:-.2px; }
-    .drawer-close{ border:0; background:transparent; font-weight:900; color:var(--muted); cursor:pointer; padding:6px 0; }
-    .drawer-link{
-      display:block;
-      padding:12px 0;
-      border-top:1px solid var(--line2);
-      color:#111;
-      text-decoration:none;
-      font-weight:900;
-      font-size:14px;
-    }
-    .drawer-link:first-of-type{ border-top:1px solid var(--line); }
-
-    /* Pages */
-    main{ display:block; }
-    .page{ display:none; }
-    .page[aria-hidden="false"]{ display:block; }
-
-    .section{ padding: 14px 0; }
-    .section + .section{ border-top: 1px solid var(--line2); }
-    .section-title{
-      display:flex;
-      align-items:flex-end;
-      justify-content:space-between;
-      gap:10px;
-      margin:0;
-      padding: 0;
-    }
-    .section-title h2{
-      margin:0;
-      font-size:13px;
-      font-weight:900;
-      letter-spacing:-.2px;
-    }
-
-    .note{
-      margin-top:10px;
-      padding:10px 0;
-      font-size:12px;
-      color: var(--muted);
-      border-top: 1px solid var(--line);
-    }
-    .note strong{ color: var(--text); }
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-
-    /* Upcoming */
-    .schedule-list{ margin-top: 10px; }
-    details.schedule{ border-top: 1px solid var(--line2); padding: 0; }
-    details.schedule:first-child{ border-top: 1px solid var(--line); }
-    details.schedule > summary{
-      list-style:none;
-      padding: 22px 0;
-      cursor:pointer;
-      display:flex;
-      gap:10px;
-      align-items:flex-start;
-    }
-    details.schedule > summary::-webkit-details-marker{ display:none; }
-    .s-title{ margin:0; font-size:14px; font-weight:800; letter-spacing:-.2px; line-height:1.3; }
-    .s-detail{ padding: 0 0 14px 0; color: var(--muted); font-size:13px; line-height:1.65; }
-    .s-detail .row{ display:flex; gap:10px; padding: 6px 0; }
-    .s-detail .k{ width:44px; flex:0 0 auto; color:#777; font-weight:800; }
-    .s-detail .v{ min-width:0; }
-
-    /* Tabs (base) */
-    .tabs{
-      margin-top: 12px;
-      display:flex;
-      gap:14px;
-      overflow:auto;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width:none;
-      padding-bottom: 14px;
-      border-bottom: 1px solid var(--line);
-    }
-    .tabs::-webkit-scrollbar{ display:none; }
-    .tab{
-      flex: 0 0 auto;
-      padding: 10px 0;
-      border: 0;
-      background: transparent;
-      color: var(--muted);
-      font-size:13px;
-      font-weight:900;
-      letter-spacing:-.2px;
-      cursor:pointer;
-      border-bottom: 2px solid transparent;
-    }
-    .tab[aria-selected="true"]{ color: var(--text); border-bottom-color: var(--text); }
-    .tab[aria-disabled="true"]{ opacity: .45; cursor: default; }
-
-    /* Photo category tabs - equal width */
-    #photoTabs{
-      display:flex;
-      gap:0;
-      overflow:hidden;
-      border-bottom:1px solid var(--line);
-      padding-bottom: 0;
-    }
-    #photoTabs .tab{
-      flex:1 1 0;
-      text-align:center;
-      padding:12px 0;
-    }
-
-    /* Search */
-    .search{
-      margin-top: 10px;
-      display:flex;
-      gap:10px;
-      align-items:center;
-    }
-    .search input{
-      width:100%;
-      padding: 10px 0;
-      border: 0;
-      border-bottom: 1px solid var(--line);
-      background: transparent;
-      color: var(--text);
-      outline: none;
-      font-size:14px;
-    }
-    .search input::placeholder{ color:#9a9a9a; }
-    .search input:focus{ border-bottom-color: var(--text); box-shadow: 0 2px 0 0 var(--focus); }
-    .btn{
-      border: 0;
-      background: transparent;
-      color: var(--muted);
-      font-size:13px;
-      font-weight:900;
-      padding: 10px 0;
-      cursor:pointer;
-      white-space:nowrap;
-    }
-    .btn:active{ transform: translateY(1px); }
-
-    /* FAQ */
-    .faq-category{ display:none; }
-    .faq-category[aria-hidden="false"]{ display:block; }
-
-    .faq-wrap{ margin-top: 20px; }
-    details.faq{ border-top: 1px solid var(--line2); padding: 0; }
-    details.faq:first-child{ border-top: 1px solid var(--line); }
-    details.faq > summary{
-      list-style:none;
-      padding: 14px 0;
-      cursor:pointer;
-      display:flex;
-      gap:12px;
-      align-items:flex-start;
-    }
-    details.faq > summary::-webkit-details-marker{ display:none; }
-    .q{ width: 18px; flex: 0 0 auto; font-weight:900; font-size:13px; line-height:1.2; color: var(--text); }
-    .qtext{ min-width:0; font-size:14px; font-weight:800; letter-spacing:-.2px; line-height:1.3; }
-    .chev{ margin-left:auto; opacity:.65; transform: rotate(0deg); transition: transform .15s ease; flex:0 0 auto; margin-top: 2px; }
-    details[open] .chev{ transform: rotate(180deg); }
-    .answer{ padding: 0 0 14px 30px; color: var(--muted); font-size:13px; line-height:1.65; }
-    .answer p{ margin: 0; }
-    .answer a{ color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
-
-    .empty{ padding: 14px 0; color: var(--muted); font-size:13px; border-top: 1px solid var(--line); margin-top: 10px; }
-
-    /* Pagination */
-    .pager{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-      padding: 14px 0 0;
-      border-top: 1px solid var(--line2);
-      margin-top: 12px;
-    }
-    .page-btn{
-      border:0;
-      background: transparent;
-      color: var(--muted);
-      font-weight:900;
-      font-size:13px;
-      padding: 6px 2px;
-      cursor:pointer;
-      min-width: 18px;
-    }
-    .page-btn[aria-current="page"]{ color: var(--text); text-decoration: underline; text-underline-offset: 4px; }
-    .page-btn:disabled{ opacity:.35; cursor:not-allowed; }
-    .ellipsis{ color:#8a8a8a; font-weight:900; user-select:none; }
-
-    /* Archive grid */
-    .archive-sub{ margin-top:8px; font-size:12px; color:var(--muted); }
-    .archive-grid{ margin-top:12px; display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; }
-    @media (min-width: 420px){ .archive-grid{ grid-template-columns: repeat(4, 1fr); } }
-    .archive-item{
-      position:relative;
-      width:100%;
-      aspect-ratio: 1 / 1;
-      overflow:hidden;
-      background:#f3f3f3;
-      cursor:pointer;
-      display:block;
-      border:0;
-      padding:0;
-      text-decoration:none;
-      color:inherit;
-    }
-    .archive-item img{ width:100%; height:100%; object-fit:cover; display:block; }
-    .tag{ position:absolute; right:8px; top:8px; font-size:12px; font-weight:900; color:#111; background:#fff; border:1px solid var(--line2); padding:4px 6px; }
-
-    /* C6: folder carousel groups */
-    #photoC6Wrap{ margin-top: 12px; }
-    .c6-group{ padding: 12px 0; border-top:1px solid var(--line2); }
-    .c6-title{ margin:0 0 10px; font-weight:900; font-size:13px; letter-spacing:-.2px; }
-    .c6-rail{
-      display:flex;
-      gap:10px;
-      overflow-x:auto;
-      -webkit-overflow-scrolling: touch;
-      scroll-snap-type:x mandatory;
-      padding-bottom: 4px;
-    }
-    .c6-rail::-webkit-scrollbar{ display:none; }
-    .c6-item{
-      flex: 0 0 auto;
-      width: 140px;
-      aspect-ratio: 1 / 1;
-      background:#f3f3f3;
-      overflow:hidden;
-      scroll-snap-align:start;
-      display:block;
-      text-decoration:none;
-      color:inherit;
-    }
-    .c6-item img{ width:100%; height:100%; object-fit:cover; display:block; }
-
-    footer{ padding: 18px 0 0; color:#8a8a8a; font-size:12px; text-align:center; }
-  </style>
-</head>
-
-<body>
-  <div class="app">
-    <header>
-      <div class="topbar">
-        <button class="icon-btn" id="menuBtn" type="button" aria-label="메뉴 열기" aria-controls="drawer" aria-expanded="false">
-          <span class="burger" aria-hidden="true"><span></span><span></span><span></span></span>
-        </button>
-        <div class="brand">
-          <h1 id="title">REDOOR INFO.</h1>
-          <p id="subtitle">다가오는 일정 & FAQ</p>
-        </div>
-        <div class="status" id="statusText"></div>
+    <section class="section" aria-labelledby="faqTitle">
+      <div class="section-title">
+        <h2 id="faqTitle">FAQ</h2>
       </div>
-    </header>
 
-    <!-- Drawer Menu -->
-    <aside class="drawer" id="drawer" aria-hidden="true">
-      <div class="drawer-backdrop" data-close></div>
-      <nav class="drawer-panel" aria-label="메뉴">
-        <div class="drawer-head">
-          <div class="drawer-title">MENU</div>
-          <button class="drawer-close" type="button" data-close aria-label="메뉴 닫기">닫기</button>
-        </div>
-        <a class="drawer-link" href="#home" data-nav>HOME</a>
-        <a class="drawer-link" href="#video" data-nav>영상 아카이빙</a>
-        <a class="drawer-link" href="#photo" data-nav>사진 아카이빙</a>
-      </nav>
-    </aside>
+      <div class="search" aria-label="FAQ 전체 검색 영역">
+        <input id="searchInput" type="search" inputmode="search" placeholder="전체 FAQ 검색" aria-label="FAQ 전체 검색" />
+        <button class="btn" id="clearSearchBtn" type="button">초기화</button>
+      </div>
 
-    <main>
-      <!-- ================= HOME PAGE ================= -->
-      <section class="page" data-page="home" aria-hidden="false">
+      <!-- 탭 버튼도 HTML에서 직접 수정 -->
+      <div class="tabs" role="tablist" aria-label="FAQ 카테고리" id="tablist">
+        <button class="tab" role="tab" aria-selected="true" data-key="general" type="button">기본</button>
+        <button class="tab" role="tab" aria-selected="false" data-key="behind" type="button">곡</button>
+        <button class="tab" role="tab" aria-selected="false" data-key="festival" type="button">공연</button>
+        <button class="tab" role="tab" aria-selected="false" data-key="door" type="button">문짝</button>
+        <button class="tab" role="tab" aria-selected="false" data-key="etc" type="button">기타</button>
+      </div>
 
-        <section class="section" aria-labelledby="scheduleTitle">
-          <div class="section-title">
-            <h2 id="scheduleTitle">UPCOMING</h2>
-          </div>
-          <div class="schedule-list" id="scheduleList">
-            <details class="schedule">
-              <summary>
-                <p class="s-title">2026 FIRST MUSIC STATION - 고양</p>
-                <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </summary>
-              <div class="s-detail">
-                <div class="row"><div class="k">일시</div><div class="v">2026년 1월 31일(토) 16:50</div></div>
-              </div>
-            </details>
-          </div>
+      <!-- 카테고리 섹션: data-key가 탭 data-key와 같아야 함 -->
+      <div class="faq-wrap" id="faqRoot">
+
+        <!-- 기본 -->
+        <section class="faq-category" data-key="general" aria-hidden="false">
+          <details class="faq">
+            <summary>
+              <div class="q" aria-hidden="true">Q</div>
+              <div class="qtext">리도어를 알고 싶습니다.</div>
+              <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </summary>
+            <div class="answer">
+              나무위키를 확인하세요.<br>
+              <a href="https://namu.wiki/w/%EB%A6%AC%EB%8F%84%EC%96%B4" target="_blank" rel="noopener">리도어 나무위키 확인</a>
+            </div>
+          </details>
+      <details class="faq">
+            <summary>
+              <div class="q" aria-hidden="true">Q</div>
+              <div class="qtext">리도어 공식 사진 같은 건 어디에서 볼 수 있나요?</div>
+              <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </summary>
+            <div class="answer">
+              리도어 공식 인스타 계정 (@band_redoor) 그리고 앳에어리어에서 운영하는 핀터레스트에 올라옵니다.
+            </div>
+          </details>
+      <details class="faq">
+            <summary>
+              <div class="q" aria-hidden="true">Q</div>
+              <div class="qtext">리도어 인스타 누가 관리해요?</div>
+              <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </summary>
+            <div class="answer">
+              입사 전 : 등대<br>
+              입사 후 : 소속사 + 등대
+            </div>
+          </details>
+   <details class="faq">
+            <summary>
+              <div class="q" aria-hidden="true">Q</div>
+              <div class="qtext">선물/팬레터는 어떻게 줘야 해요?</div>
+              <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </summary>
+            <div class="answer"> 소속사 AT AREA 계정 스토리 하이라이트 'NOTICE'에서 확인 가능, 공지 올라온 거 올림<br><br>
+             <주소><br>
+             서울특별시 강남구 도산대로15길 12, 가로수빌딩 6층 (받는사람: "아티스트명"(ex. 리도어 / 리도어 이등대)) (우편번호 06036)<br><br>
+             <유의사항><br>
+팬레터 및 선물은 별도 신청 과정 없이 안내드리는 주소로 보내주시면 됩니다.<br>
+착불 배송 등 비용이 발생하거나 아티스트의 통관고유부호가 필요한 경우 무통보 반송 처리됩니다.<br>
+퀵 서비스를 통해 발송하시는 팬레터 및 선물은 반송 처리되며, 반송이 불가할 시 폐기 처리됩니다.<br>
+서포트 외 팬레터/선물 전달을 위한 회사 직접 방문은 불가합니다.<br>
+무단으로 방문 후 팬레터 또는 선물을 두고 가는 경우, 무통보 폐기 처리됩니다.<br>
+배송 시 변질되기 쉬운 음식물은 전달 불가합니다.<br>
+팬레터 및 선물 내 상품권, 쿠폰, 현금 등의 선물은 전달이 불가합니다.<br>
+소중한 팬레터와 선물들이 분실되지 않도록, 주소지를 꼼꼼히 확인 후 보내주시기 바랍니다.<br>
+ <a href="https://www.instagram.com/at____area/" target="_blank" rel="noopener">AT ATEA IG</a>
+            </div>
+          </details>
+           <details class="faq">
+            <summary>
+              <div class="q" aria-hidden="true">Q</div>
+              <div class="qtext">olsm 뜻 ? 이등대 뜻 ?</div>
+              <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </summary>
+            <div class="answer">
+              ol(이) s(sang의 s) m(min의 m) <br>
+              이등대 : 키가 커서, 본인의 노래로 비춰주고 싶다는 뜻
+            </div>
+          </details>
         </section>
 
-        <section class="section" aria-labelledby="faqTitle">
-          <div class="section-title">
-            <h2 id="faqTitle">FAQ</h2>
-          </div>
+        <!-- 곡 -->
+        <section class="faq-category" data-key="behind" aria-hidden="true">
+   <details class="faq">
+            <summary>
+              <div class="q" aria-hidden="true">Q</div>
+              <div class="qtext">멤버들 사클 계정</div>
+              <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </summary>
+            <div class="answer">
+             곡 남아 있는 등대 계정만 남깁니다.<br>
+  <a href="https://on.soundcloud.com/NFbnEr4aE5PjIMEFpS" target="_blank" rel="noopener">사클 흉터</a><br>
+             <a href="https://on.soundcloud.com/bMPeZVR091gfbA9bCx" target="_blank" rel="noopener">사클 서울대입구역</a>
+            </div>
+          </details>
+          <details class="faq">
+            <summary>
+              <div class="q" aria-hidden="true">Q</div>
+              <div class="qtext">왜 세 번을 빙글 도는지에 대해 말해 준 적 있나요?</div>
+              <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </summary>
+            <div class="answer">
+              말해준 적 없습니다. <br>
+             사랑의 미학 "난 세 번을 빙글 돌아요" - 세상:소음 "왜 세 번을 빙그르 돌았냐고 물으면 아무 대답도 못할 거예요"<br>
+             각자 추측해봅시다!
+            </div>
+          </details>
+      <details class="faq">
+            <summary>
+              <div class="q" aria-hidden="true">Q</div>
+              <div class="qtext">청우 중국어 가사?에 대해서 뜻에 대해 말해준 적 있나요? </div>
+              <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </summary>
+            <div class="answer">
+              없음.. 첨밀밀보고 만든 곡.<br>
+              매거진에서 가사 번역한 것은 있긴 합니다.<br>
+              <a href="https://www.instagram.com/reel/DQmFUcTkqdB/" target="_blank" rel="noopener">매거진(IG) 중국어 나레이션 번역</a><br>
+              <a href="https://youtu.be/q2Kaxf806zA?si=UP8dB-35OX7Zr0Cy" target="_blank" rel="noopener">청우 비하인드 13분 대 부터</a>
 
-          <div class="search" aria-label="FAQ 전체 검색 영역">
-            <input id="searchInput" type="search" inputmode="search" placeholder="전체 FAQ 검색" aria-label="FAQ 전체 검색" />
-            <button class="btn" id="clearSearchBtn" type="button">초기화</button>
-          </div>
-
-          <div class="tabs" role="tablist" aria-label="FAQ 카테고리" id="tablist">
-            <button class="tab" role="tab" aria-selected="true" data-key="general" type="button">기본</button>
-            <button class="tab" role="tab" aria-selected="false" data-key="behind" type="button">곡</button>
-            <button class="tab" role="tab" aria-selected="false" data-key="festival" type="button">공연</button>
-            <button class="tab" role="tab" aria-selected="false" data-key="door" type="button">문짝</button>
-            <button class="tab" role="tab" aria-selected="false" data-key="etc" type="button">기타</button>
-          </div>
-
-          <div class="faq-wrap" id="faqRoot">
-            <section class="faq-category" data-key="general" aria-hidden="false">
-              <details class="faq">
-                <summary>
-                  <div class="q" aria-hidden="true">Q</div>
-                  <div class="qtext">리도어를 알고 싶습니다.</div>
-                  <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </summary>
-                <div class="answer">
-                  나무위키를 확인하세요.<br>
-                  <a href="https://namu.wiki/w/%EB%A6%AC%EB%8F%84%EC%96%B4" target="_blank" rel="noopener">리도어 나무위키 확인</a>
-                </div>
-              </details>
-            </section>
-
-            <section class="faq-category" data-key="behind" aria-hidden="true">
-              <details class="faq">
-                <summary>
-                  <div class="q" aria-hidden="true">Q</div>
-                  <div class="qtext">왜 세 번을 빙글 도는지에 대해 말해 준 적 있나요?</div>
-                  <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </summary>
-                <div class="answer">말해준 적 없습니다. 사랑의 미학 "난 세 번을 빙글 돌아요" - 세상:소음 "왜 세 번을 빙그르 돌았냐고 물으면 아무 대답도 못할 거예요" 각자 추측해봅시다!</div>
-              </details>
-            </section>
-
-            <section class="faq-category" data-key="festival" aria-hidden="true"><div class="empty">질문을 추가해 주세요.</div></section>
-            <section class="faq-category" data-key="door" aria-hidden="true"><div class="empty">질문을 추가해 주세요.</div></section>
-            <section class="faq-category" data-key="etc" aria-hidden="true"><div class="empty">질문을 추가해 주세요.</div></section>
-          </div>
-
-          <div class="pager" id="pager" aria-label="페이지네이션"></div>
+            </div>
+          </details>
         </section>
 
-      </section>
-
-      <!-- ================= VIDEO PAGE ================= -->
-      <section class="page" data-page="video" aria-hidden="true">
-        <section class="section">
-          <div class="section-title"><h2>영상 아카이빙</h2></div>
-          <div class="archive-sub">Google Drive 영상 폴더 연동 (자동)</div>
-          <div id="driveNoteVideo" class="note" hidden></div>
-          <div class="archive-grid" id="videoGrid"></div>
+        <!-- 공연 -->
+        <section class="faq-category" data-key="festival" aria-hidden="true">
+   <details class="faq">
+            <summary>
+              <div class="q" aria-hidden="true">Q</div>
+              <div class="qtext">무대 자리배치가 어떻게 되나요? </div>
+              <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </summary>
+            <div class="answer">
+              메인 (거의 대부분) : 세웅(베이스) 상욱(드럼) 등대(보컬) 승현(기타)<br>
+              번외 1 (25 베를린, 25 부락) : 승현(기타) 세웅(베이스) 상욱(드럼) 등대(보컬)<br>
+              번외 2 (25 그민페) : 승현(기타) 상욱(드럼) 세웅(베이스) 등대(보컬)
+            </div>
+          </details>
+   <details class="faq">
+            <summary>
+              <div class="q" aria-hidden="true">Q</div>
+              <div class="qtext">티켓팅 무통장 입금 제한? </div>
+              <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </summary>
+            <div class="answer">
+              거진 무통장 입금 제한되는 공연은 99% '무통장 입금 제한 안내'문구가 있습니다.<br>
+              그간 했던 리도어 공연 무통장 입금 제한한 적 없었습니다.
+            </div>
+          </details>
+   <details class="faq">
+            <summary>
+              <div class="q" aria-hidden="true">Q</div>
+              <div class="qtext">리도어 콘서트 본인확인 하나요? </div>
+              <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </summary>
+            <div class="answer">
+              아직까진 한 적 없음! 이렇게만 해
+            </div>
+          </details>
+   <details class="faq">
+            <summary>
+              <div class="q" aria-hidden="true">Q</div>
+              <div class="qtext">페스티벌 배송 티켓 신분증 검사? </div>
+              <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </summary>
+            <div class="answer">
+              안합니다. 현장수령은 필요합니다.
+            </div>
+          </details>
+      <details class="faq">
+            <summary>
+              <div class="q" aria-hidden="true">Q</div>
+              <div class="qtext">페스티벌 언제 가면 돼요? 펜스 잡을 수 있어요?</div>
+              <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </summary>
+            <div class="answer">
+              상황에 따라 아주 다른 것이 페스티벌입니다.. 보고자 하는 팀 혹은 리도어 시작 전까지만 입장하면 됩니다.<br>
+              펜스는.. 뺑이를 쳐야 얻는 것입니다.. 사람이 몇 시간 서 있을 수 있는지는 본인 피지컬에 달려 있습니다.<br>
+              시작 전 쓰러지는 사람도 많고, 아파서 중간에 나가는 사람, 버티지 못해 나가는 사람 많이 봤습니다.<br>
+              본인 판단 하 현명하게! 건강하게!
+            </div>
+          </details>
+      <details class="faq">
+            <summary>
+              <div class="q" aria-hidden="true">Q</div>
+              <div class="qtext"> 공연/페스티벌 솔플 많이 하나요?</div>
+              <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </summary>
+            <div class="answer">
+              정말 많이 합니다. 기죽을 거 없습니다. 저도 합니다. 페스티벌 경우, 같이 갔다가 찢어지기도 합니다. 무서울 거 전혀 없습니다.
+            </div>
+          </details>
         </section>
-      </section>
 
-      <!-- ================= PHOTO PAGE ================= -->
-      <section class="page" data-page="photo" aria-hidden="true">
-        <section class="section">
-          <div class="section-title"><h2>사진 아카이빙</h2></div>
-          <div class="archive-sub">Google Drive 이미지 폴더 연동 (자동)</div>
-          <div id="driveNotePhoto" class="note" hidden></div>
-
-          <div class="tabs" id="photoTabs" role="tablist" aria-label="사진 카테고리">
-            <button class="tab" type="button" aria-selected="true" data-photo="c1">C1</button>
-            <button class="tab" type="button" aria-selected="false" data-photo="c2">C2</button>
-            <button class="tab" type="button" aria-selected="false" data-photo="c3">C3</button>
-            <button class="tab" type="button" aria-selected="false" data-photo="c4">C4</button>
-            <button class="tab" type="button" aria-selected="false" data-photo="c5">C5</button>
-            <button class="tab" type="button" aria-selected="false" data-photo="c6">C6</button>
-          </div>
-
-          <div class="archive-grid" id="photoGrid-c1" aria-hidden="false"></div>
-          <div class="archive-grid" id="photoGrid-c2" aria-hidden="true" style="display:none"></div>
-          <div class="archive-grid" id="photoGrid-c3" aria-hidden="true" style="display:none"></div>
-          <div class="archive-grid" id="photoGrid-c4" aria-hidden="true" style="display:none"></div>
-          <div class="archive-grid" id="photoGrid-c5" aria-hidden="true" style="display:none"></div>
-          <div id="photoC6Wrap" aria-hidden="true" style="display:none"></div>
-
+        <!-- 문짝 -->
+        <section class="faq-category" data-key="door" aria-hidden="true">
+            <details class="faq">
+            <summary>
+              <div class="q" aria-hidden="true">Q</div>
+              <div class="qtext">문짝 나레이션 누구인가요? </div>
+              <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </summary>
+            <div class="answer">
+              문짝 나레이션 누구냐 물으면 아무 대답도 못할 거예요 ~ ~ ~ <br>
+              1화인가 2화까지 승현일걸요.. 아닐 수도 있고요.. 최근 에피소드들은 승현 아님.
+            </div>
+          </details>
+      <details class="faq">
+            <summary>
+              <div class="q" aria-hidden="true">Q</div>
+              <div class="qtext">문짝 누가 편집해요? </div>
+              <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </summary>
+            <div class="answer">
+              이 등 대
+            </div>
+          </details>
         </section>
-      </section>
 
-    </main>
-
-    <footer>© <span id="year"></span> FAQ</footer>
-  </div>
-
-<script>
-(() => {
-  // ===== Config =====
-  const PAGE_SIZE = 5;
-
-  // ===== Elements =====
-  const statusTextEl = document.getElementById('statusText');
-
-  const menuBtn = document.getElementById('menuBtn');
-  const drawer = document.getElementById('drawer');
-  const pages = [...document.querySelectorAll('.page')];
-
-  const tablistEl = document.getElementById('tablist');
-  const categories = [...document.querySelectorAll('.faq-category')];
-  const pagerEl = document.getElementById('pager');
-  const searchInputEl = document.getElementById('searchInput');
-  const clearSearchBtn = document.getElementById('clearSearchBtn');
-
-  // Photo tabs
-  const photoTabs = document.getElementById('photoTabs');
-  const photoC6Wrap = document.getElementById('photoC6Wrap');
-
-  // Drive note elements
-  const driveNotePhoto = document.getElementById('driveNotePhoto');
-  const driveNoteVideo = document.getElementById('driveNoteVideo');
-
-  // ===== Drawer =====
-  function openDrawer(){
-    drawer.setAttribute('aria-hidden','false');
-    menuBtn.setAttribute('aria-expanded','true');
-  }
-  function closeDrawer(){
-    drawer.setAttribute('aria-hidden','true');
-    menuBtn.setAttribute('aria-expanded','false');
-  }
-
-  menuBtn.addEventListener('click', () => {
-    const open = drawer.getAttribute('aria-hidden') === 'false';
-    open ? closeDrawer() : openDrawer();
-  });
-
-  drawer.addEventListener('click', (e) => {
-    if (e.target.matches('[data-close]')) closeDrawer();
-    if (e.target.matches('[data-nav]')) closeDrawer();
-  });
-
-  // ===== Router =====
-  function showPage(pageKey){
-    pages.forEach(p => p.setAttribute('aria-hidden', p.dataset.page === pageKey ? 'false' : 'true'));
-    if (pageKey !== 'home') statusTextEl.textContent = '';
-  }
-
-  function route(){
-    const hash = (location.hash || '#home').replace('#','');
-    const pageKey = ['home','video','photo'].includes(hash) ? hash : 'home';
-    showPage(pageKey);
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-  }
-
-  window.addEventListener('hashchange', route);
-
-  // ===== Google Drive =====
-  const DRIVE = {
-    photoFolders: [
-      { key: 'c1', label: 'C1', folderId: '1AcOrowONBy2JPyXrd4mCR8x0khc-azDu' },
-      { key: 'c2', label: 'C2', folderId: '1PTI70CYicoaU_qj41c-NPzlm0vQecjb8' },
-      { key: 'c3', label: 'C3', folderId: '10kBeYbZ7IOQisOV2eusZDUyPgryx4rP8' },
-      { key: 'c4', label: 'C4', folderId: '1ulyv1QjgTILa2xZa3PAvKsJX7C7trLkl' },
-      { key: 'c5', label: 'C5', folderId: '1PYVCSpXK_dDE1tVfQCAd3Ma-L9DTMd43' },
-      // ✅ C6는 여러 폴더(폴더ID는 전부 실제 값으로 채워야 함)
-      { key: 'c6', label: 'C6', folderIds: [
-        '18UBu-bdqQQw5heQ2KJ9S8xKr6Jvz9a2L',
-        '1y-ObpiDB5ptLvBj1IEBFwonrajA1fCrX',
-        // TODO: 아래 2개는 반드시 실제 폴더ID로 교체하세요
-        'C6_폴더ID_3',
-        'C6_폴더ID_4'
-      ] }
-    ],
-    videoFolderId: '1o9k1LMCZhnUqH7PrSwU0dVV-ljWJ0A01',
-    apiKey: 'AIzaSyDYqUApnZbrdgl1Lf-AU_fBgso7tPQoS9Q'
-  };
-
-  function driveThumb(fileId){
-    return `https://drive.google.com/thumbnail?id=${fileId}&sz=w600`;
-  }
-  function driveOpenFile(fileId){
-    return `https://drive.google.com/file/d/${fileId}/view`;
-  }
-
-  function showDriveNote(el, html){
-    if (!el) return;
-    el.hidden = false;
-    el.innerHTML = html;
-  }
-  function hideDriveNote(el){
-    if (!el) return;
-    el.hidden = true;
-    el.innerHTML = '';
-  }
-
-  async function loadDriveFolder(folderId){
-    const q = `'${folderId}' in parents and trashed=false`;
-
-    const url = `https://www.googleapis.com/drive/v3/files?` +
-      `q=${encodeURIComponent(q)}` +
-      `&pageSize=1000` +
-      `&fields=files(id,name,mimeType,createdTime)` +
-      `&orderBy=createdTime desc` +
-      `&includeItemsFromAllDrives=true&supportsAllDrives=true` +
-      `&key=${encodeURIComponent(DRIVE.apiKey)}`;
-
-    const res = await fetch(url);
-    const json = await res.json().catch(() => ({}));
-
-    if (!res.ok || json.error){
-      const msg = json?.error?.message || `HTTP ${res.status}`;
-      const hint = `
-API URL: ${url}`;
-      throw new Error(msg + hint);
-    }
-    return json.files || [];
-  }
-
-  async function getDriveName(fileId){
-    const url = `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?` +
-      `fields=name&supportsAllDrives=true&key=${encodeURIComponent(DRIVE.apiKey)}`;
-
-    const res = await fetch(url);
-    const json = await res.json().catch(() => ({}));
-    if (!res.ok || json.error) return '';
-    return json.name || '';
-  }
-
-  let c6Loaded = false;
-
-  async function renderC6Carousel(){
-    if (!photoC6Wrap) return;
-
-    const c6 = DRIVE.photoFolders.find(x => x.key === 'c6');
-    const folderIds = c6?.folderIds || [];
-
-    // placeholder가 남아있으면 실패할 수 있으니 안내
-    const hasPlaceholder = folderIds.some(x => String(x).includes('폴더ID'));
-
-    if (!folderIds.length){
-      photoC6Wrap.innerHTML = `<div class="empty">C6 폴더가 비어있습니다.</div>`;
-      c6Loaded = true;
-      return;
-    }
-
-    photoC6Wrap.innerHTML = `<div class="empty">불러오는 중…</div>`;
-
-    const results = await Promise.allSettled(folderIds.map(async (fid) => {
-      const [name, files] = await Promise.all([
-        getDriveName(fid),
-        loadDriveFolder(fid),
-      ]);
-      const images = (files || []).filter(f => (f.mimeType||'').startsWith('image/'));
-      return { folderId: fid, name: name || 'Untitled', images };
-    }));
-
-    const head = hasPlaceholder
-      ? `<div class="note"><strong>주의:</strong> C6 폴더ID에 placeholder(예: <span class="mono">C6_폴더ID_3</span>)가 남아있으면 해당 묶음은 실패합니다.</div>`
-      : '';
-
-    const body = results.map((r, idx) => {
-      if (r.status === 'rejected'){
-        return `
-          <div class="c6-group">
-            <p class="c6-title">폴더 ${idx+1}</p>
-            <div class="empty">불러오기 실패</div>
-          </div>
-        `;
-      }
-
-      const { name, images } = r.value;
-      const items = images.map(f => `
-        <a class="c6-item" href="${driveOpenFile(f.id)}" target="_blank" rel="noopener">
-          <img src="${driveThumb(f.id)}" alt="${f.name}" loading="lazy">
-        </a>
-      `).join('');
-
-      return `
-        <div class="c6-group">
-          <p class="c6-title">${name}</p>
-          <div class="c6-rail">${items || '<div class="empty">사진이 없습니다.</div>'}</div>
-        </div>
-      `;
-    }).join('');
-
-    photoC6Wrap.innerHTML = head + body;
-    c6Loaded = true;
-  }
-
-  function setActivePhotoTab(key){
-    // tab aria
-    photoTabs?.querySelectorAll('.tab').forEach(t => {
-      t.setAttribute('aria-selected', t.dataset.photo === key ? 'true' : 'false');
-    });
-
-    // c1~c5 grid toggle
-    DRIVE.photoFolders.forEach(c => {
-      if (c.key === 'c6') return;
-      const grid = document.getElementById(`photoGrid-${c.key}`);
-      if (!grid) return;
-      const show = c.key === key;
-      grid.style.display = show ? '' : 'none';
-      grid.setAttribute('aria-hidden', show ? 'false' : 'true');
-    });
-
-    // c6 wrap toggle
-    if (photoC6Wrap){
-      const show = (key === 'c6');
-      photoC6Wrap.style.display = show ? '' : 'none';
-      photoC6Wrap.setAttribute('aria-hidden', show ? 'false' : 'true');
-      if (show && !c6Loaded){
-        // 탭 눌렀을 때 lazy load
-        renderC6Carousel().catch(console.error);
-      }
-    }
-  }
-
-  async function initDrive(){
-    const videoGrid = document.getElementById('videoGrid');
-
-    // 로딩 표시 (c1~c5)
-    DRIVE.photoFolders.forEach(c => {
-      if (c.key === 'c6') return;
-      const grid = document.getElementById(`photoGrid-${c.key}`);
-      if (grid) grid.innerHTML = `<div class="empty">불러오는 중…</div>`;
-    });
-    if (photoC6Wrap) photoC6Wrap.innerHTML = `<div class="empty">C6 탭에서 불러옵니다.</div>`;
-    if (videoGrid) videoGrid.innerHTML = `<div class="empty">불러오는 중…</div>`;
-
-    // file:// 경고
-    if (location.protocol === 'file:'){
-      const msg = `
-        <div><strong>주의:</strong> 지금은 <span class="mono">file://</span> 로 열려있습니다.</div>
-        <div>Drive API가 막히거나 오동작할 수 있어요. 로컬 서버(<span class="mono">http://localhost</span>) 또는 Vercel 주소에서 테스트해 주세요.</div>
-      `;
-      showDriveNote(driveNotePhoto, msg);
-      showDriveNote(driveNoteVideo, msg);
-    } else {
-      hideDriveNote(driveNotePhoto);
-      hideDriveNote(driveNoteVideo);
-    }
-
-    try{
-      // ✅ Photos (c1~c5) — 실패해도 다른 건 계속
-      const photoBases = DRIVE.photoFolders.filter(x => x.key !== 'c6');
-      const results = await Promise.allSettled(
-        photoBases.map(async (c) => {
-          const files = await loadDriveFolder(c.folderId);
-          return { ...c, files };
-        })
-      );
-
-      results.forEach((r, idx) => {
-        const meta = photoBases[idx];
-        const grid = document.getElementById(`photoGrid-${meta.key}`);
-        if (!grid) return;
-
-        if (r.status === 'rejected'){
-          grid.innerHTML = `<div class="empty">불러오기 실패 (폴더 공개/ID 확인)</div>`;
-          return;
-        }
-
-        const { files } = r.value;
-        const html = (files || [])
-          .filter(f => (f.mimeType || '').startsWith('image/'))
-          .map(f => `
-            <a class="archive-item"
-              href="${driveOpenFile(f.id)}"
-              target="_blank"
-              rel="noopener"
-              aria-label="Drive에서 사진 열기">
-              <img src="${driveThumb(f.id)}" alt="${f.name}" loading="lazy" />
-            </a>
-          `).join('');
-
-        grid.innerHTML = html || `<div class="empty">사진이 없습니다.</div>`;
-      });
-
-      // ✅ Videos (single folder)
-      const videos = await loadDriveFolder(DRIVE.videoFolderId);
-      if (videoGrid){
-        const html = (videos || [])
-          .filter(f => (f.mimeType || '').startsWith('video/'))
-          .map(f => `
-            <a class="archive-item"
-              href="${driveOpenFile(f.id)}"
-              target="_blank"
-              rel="noopener"
-              aria-label="Drive에서 영상 열기">
-              <img src="${driveThumb(f.id)}" alt="${f.name}" loading="lazy" />
-              <div class="tag">VIDEO</div>
-            </a>
-          `).join('');
-        videoGrid.innerHTML = html || `<div class="empty">영상이 없습니다.</div>`;
-      }
-
-      // 기본 탭은 c1
-      setActivePhotoTab('c1');
-
-    } catch (err){
-      console.error('Drive load error', err);
-      const msg = (err && err.message) ? err.message : 'Drive load error';
-      const safe = msg.replaceAll('<','&lt;').replaceAll('>','&gt;');
-
-      // photo error (c1~c5)
-      DRIVE.photoFolders.forEach(c => {
-        if (c.key === 'c6') return;
-        const grid = document.getElementById(`photoGrid-${c.key}`);
-        if (grid) grid.innerHTML = `<div class="empty">Drive 연동 실패</div>`;
-      });
-      if (videoGrid) videoGrid.innerHTML = `<div class="empty">Drive 연동 실패</div>`;
-
-      const noteHtml = `
-        <div><strong>에러 메시지:</strong></div>
-        <div class="mono" style="white-space:pre-wrap; word-break:break-word;">${safe}</div>
-      `;
-      showDriveNote(driveNotePhoto, noteHtml);
-      showDriveNote(driveNoteVideo, noteHtml);
-    }
-  }
-
-  // Photo tabs click
-  photoTabs?.addEventListener('click', (e) => {
-    const btn = e.target.closest('.tab');
-    if (!btn) return;
-    const key = btn.dataset.photo;
-    if (!key) return;
-    setActivePhotoTab(key);
-  });
-
-  // ===== FAQ logic =====
-  let activeKey = tablistEl?.querySelector('.tab[aria-selected="true"]')?.dataset.key
-    || tablistEl?.querySelector('.tab')?.dataset.key
-    || '';
-
-  let searchQuery = '';
-  let searchPage = 1;
-  let pageByKey = Object.fromEntries(categories.map(s => [s.dataset.key, 1]));
-
-  const clamp = (n,min,max) => Math.max(min, Math.min(max, n));
-
-  function buildPager(current, total){
-    const items = [];
-    if (total <= 1) return items;
-
-    const push = (type, value) => items.push({ type, value });
-    const showRange = (start, end) => { for (let i=start; i<=end; i++) push('page', i); };
-
-    push('prev', Math.max(1, current-1));
-
-    if (total <= 7){
-      showRange(1, total);
-    } else {
-      showRange(1, 2);
-      const left = clamp(current - 1, 3, total-2);
-      const right = clamp(current + 1, 3, total-2);
-      if (left > 3) push('ellipsis');
-      showRange(left, right);
-      if (right < total - 2) push('ellipsis');
-      showRange(total-1, total);
-    }
-
-    push('next', Math.min(total, current+1));
-    return items;
-  }
-
-  function setTabsDisabled(disabled){
-    tablistEl?.querySelectorAll('.tab').forEach(btn => {
-      btn.setAttribute('aria-disabled', disabled ? 'true' : 'false');
-    });
-  }
-
-  function showCategory(key){
-    categories.forEach(sec => {
-      sec.setAttribute('aria-hidden', sec.dataset.key === key ? 'false' : 'true');
-    });
-  }
-
-  function setActiveTab(key){
-    tablistEl?.querySelectorAll('.tab').forEach(btn => {
-      const sel = btn.dataset.key === key;
-      btn.setAttribute('aria-selected', sel ? 'true' : 'false');
-      btn.tabIndex = sel ? 0 : -1;
-    });
-  }
-
-  function getVisibleFaqItems(){
-    if (searchQuery.trim()){
-      const q = searchQuery.trim().toLowerCase();
-      const all = [...document.querySelectorAll('.faq-category details.faq')];
-      return all.filter(d => d.textContent.toLowerCase().includes(q));
-    }
-    const sec = categories.find(s => s.dataset.key === activeKey);
-    return sec ? [...sec.querySelectorAll('details.faq')] : [];
-  }
-
-  function ensureEmptyState(section, visibleCount){
-    const empty = section.querySelector(':scope > .empty');
-    if (empty) empty.style.display = visibleCount ? 'none' : 'block';
-  }
-
-  function renderPager(current, total){
-    const items = buildPager(current, total);
-    if (!items.length){
-      pagerEl.innerHTML = '';
-      return;
-    }
-
-    pagerEl.innerHTML = items.map(it => {
-      if (it.type === 'ellipsis') return `<span class="ellipsis" aria-hidden="true">•••</span>`;
-      if (it.type === 'prev') return `<button class="page-btn" type="button" ${current===1 ? 'disabled':''} aria-label="이전" data-page="${it.value}">이전</button>`;
-      if (it.type === 'next') return `<button class="page-btn" type="button" ${current===total ? 'disabled':''} aria-label="다음" data-page="${it.value}">다음</button>`;
-      const isCurrent = it.value === current;
-      return `<button class="page-btn" type="button" aria-label="${it.value}페이지" data-page="${it.value}" ${isCurrent ? 'aria-current="page"':''}>${it.value}</button>`;
-    }).join('');
-
-    pagerEl.onclick = (e) => {
-      const btn = e.target.closest('.page-btn');
-      if (!btn || btn.disabled) return;
-      const nextPage = Number(btn.dataset.page);
-      if (searchQuery.trim()) searchPage = nextPage;
-      else pageByKey[activeKey] = nextPage;
-      document.getElementById('faqTitle').scrollIntoView({ behavior: 'smooth', block: 'start' });
-      paginateAndRender();
-    };
-  }
-
-  function paginateAndRender(){
-    const items = getVisibleFaqItems();
-    const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
-
-    const current = searchQuery.trim()
-      ? clamp(searchPage, 1, totalPages)
-      : clamp(pageByKey[activeKey] || 1, 1, totalPages);
-
-    if (searchQuery.trim()) searchPage = current;
-    else pageByKey[activeKey] = current;
-
-    document.querySelectorAll('.faq-category details.faq').forEach(d => d.style.display = 'none');
-
-    if (searchQuery.trim()){
-      categories.forEach(sec => sec.setAttribute('aria-hidden','false'));
-    } else {
-      showCategory(activeKey);
-    }
-
-    const start = (current - 1) * PAGE_SIZE;
-    const pageItems = items.slice(start, start + PAGE_SIZE);
-    pageItems.forEach(d => d.style.display = '');
-
-    if (searchQuery.trim()){
-      categories.forEach(sec => {
-        const visibleInSection = [...sec.querySelectorAll('details.faq')].some(d => d.style.display !== 'none');
-        ensureEmptyState(sec, visibleInSection ? 1 : 0);
-      });
-      statusTextEl.textContent = `전체 검색 결과: ${items.length}개`;
-    } else {
-      const sec = categories.find(s => s.dataset.key === activeKey);
-      if (sec) ensureEmptyState(sec, pageItems.length);
-      statusTextEl.textContent = '';
-    }
-
-    renderPager(current, totalPages);
-  }
-
-  tablistEl?.addEventListener('click', (e) => {
-    const btn = e.target.closest('.tab');
-    if (!btn) return;
-    if (btn.getAttribute('aria-disabled') === 'true') return;
-
-    activeKey = btn.dataset.key;
-    setActiveTab(activeKey);
-    pageByKey[activeKey] = 1;
-    paginateAndRender();
-  });
-
-  searchInputEl?.addEventListener('input', (e) => {
-    searchQuery = e.target.value || '';
-    searchPage = 1;
-    setTabsDisabled(!!searchQuery.trim());
-    paginateAndRender();
-  });
-
-  clearSearchBtn?.addEventListener('click', () => {
-    searchQuery = '';
-    searchInputEl.value = '';
-    searchPage = 1;
-    setTabsDisabled(false);
-    categories.forEach(sec => sec.setAttribute('aria-hidden', sec.dataset.key === activeKey ? 'false' : 'true'));
-    paginateAndRender();
-    searchInputEl.focus();
-  });
-
-  // ===== Boot =====
-  document.getElementById('year').textContent = String(new Date().getFullYear());
-
-  setActiveTab(activeKey);
-  showCategory(activeKey);
-  setTabsDisabled(false);
-  paginateAndRender();
-  route();
-
-  // Drive 연동 시작
-  initDrive();
-
-  // ===== Tests (?test=1) =====
-  function runTests(){
-    console.assert(document.querySelectorAll('.page').length === 3, 'TEST: should have 3 pages');
-    console.assert(Array.isArray(DRIVE.photoFolders) && DRIVE.photoFolders.length === 6, 'TEST: should have 6 photo folders');
-    console.assert(typeof DRIVE.apiKey === 'string' && DRIVE.apiKey.length > 10, 'TEST: apiKey should look non-empty');
-    console.log('All tests passed');
-  }
-  if (new URLSearchParams(location.search).get('test') === '1') runTests();
-})();
-</script>
-</body>
-</html>
+        <!-- 기타 -->
+        <section class="faq-category" data-key="etc" aria-hidden="true">
+      <details class="faq">
+            <summary>
+              <div class="q" aria-hidden="true">Q</div>
+              <div class="qtext">멤버들끼리 반말 하나요? </div>
+              <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </summary>
+            <div class="answer">
+             그래 보임<br>
+             찐친들임
+            </div>
+          </details>
+   <details class="faq">
+            <summary>
+              <div class="q" aria-hidden="true">Q</div>
+              <div class="qtext">공연 후 퇴근길 있나요?</div>
+              <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </summary>
+            <div class="answer">
+              케바케라 아무도 모릅니다.
+            </div>
+          </details>
+        </section>
+
+      </div>
+
+      <div class="pager" id="pager" aria-label="페이지네이션"></div>
+    </section>
