@@ -409,7 +409,22 @@
           <div class="section-title"><h2>사진 아카이빙</h2></div>
           <div class="archive-sub">Google Drive 이미지 폴더 연동 (자동)</div>
           <div id="driveNotePhoto" class="note" hidden></div>
-          <div class="archive-grid" id="photoGrid"></div>
+
+          <div class="tabs" id="photoTabs" role="tablist" aria-label="사진 카테고리">
+            <button class="tab" type="button" aria-selected="true" data-photo="c1">C1</button>
+            <button class="tab" type="button" aria-selected="false" data-photo="c2">C2</button>
+            <button class="tab" type="button" aria-selected="false" data-photo="c3">C3</button>
+            <button class="tab" type="button" aria-selected="false" data-photo="c4">C4</button>
+            <button class="tab" type="button" aria-selected="false" data-photo="c5">C5</button>
+            <button class="tab" type="button" aria-selected="false" data-photo="c6">C6</button>
+          </div>
+
+          <div class="archive-grid" id="photoGrid-c1" aria-hidden="false"></div>
+          <div class="archive-grid" id="photoGrid-c2" aria-hidden="true" style="display:none"></div>
+          <div class="archive-grid" id="photoGrid-c3" aria-hidden="true" style="display:none"></div>
+          <div class="archive-grid" id="photoGrid-c4" aria-hidden="true" style="display:none"></div>
+          <div class="archive-grid" id="photoGrid-c5" aria-hidden="true" style="display:none"></div>
+          <div class="archive-grid" id="photoGrid-c6" aria-hidden="true" style="display:none"></div>
         </section>
       </section>
 
@@ -435,6 +450,9 @@
   const pagerEl = document.getElementById('pager');
   const searchInputEl = document.getElementById('searchInput');
   const clearSearchBtn = document.getElementById('clearSearchBtn');
+
+  // Photo tabs
+  const photoTabs = document.getElementById('photoTabs');
 
   // Drive note elements
   const driveNotePhoto = document.getElementById('driveNotePhoto');
@@ -479,7 +497,14 @@
   // NOTE: 로컬에서 file:// 로 열면(더블클릭) 일부 환경에서 오류가 날 수 있어요.
   // 가능하면 로컬 서버(http://localhost) 또는 Vercel 주소에서 테스트하세요.
   const DRIVE = {
-    photoFolderId: '1aSMttxKYkPVmFYWAyVWZskK3ZTerAESf',
+    photoFolders: [
+      { key: 'c1', label: 'C1', folderId: '1AcOrowONBy2JPyXrd4mCR8x0khc-azDu' },
+      { key: 'c2', label: 'C2', folderId: '1PTI70CYicoaU_qj41c-NPzlm0vQecjb8' },
+      { key: 'c3', label: 'C3', folderId: '10kBeYbZ7IOQisOV2eusZDUyPgryx4rP8' },
+      { key: 'c4', label: 'C4', folderId: '1ulyv1QjgTILa2xZa3PAvKsJX7C7trLkl' },
+      { key: 'c5', label: 'C5', folderId: '1PYVCSpXK_dDE1tVfQCAd3Ma-L9DTMd43' },
+      { key: 'c6', label: 'C6', folderId: '16jor_cyXurWmfniWlLOLGKp8YHt8f3jh' },
+    ],
     videoFolderId: '1o9k1LMCZhnUqH7PrSwU0dVV-ljWJ0A01',
     apiKey: 'AIzaSyDYqUApnZbrdgl1Lf-AU_fBgso7tPQoS9Q'
   };
@@ -525,11 +550,30 @@ API URL: ${url}`;
     return json.files || [];
   }
 
+  function setActivePhotoTab(key){
+    // tab aria
+    photoTabs?.querySelectorAll('.tab').forEach(t => {
+      t.setAttribute('aria-selected', t.dataset.photo === key ? 'true' : 'false');
+    });
+
+    // grid toggle
+    DRIVE.photoFolders.forEach(c => {
+      const grid = document.getElementById(`photoGrid-${c.key}`);
+      if (!grid) return;
+      const show = c.key === key;
+      grid.style.display = show ? '' : 'none';
+      grid.setAttribute('aria-hidden', show ? 'false' : 'true');
+    });
+  }
+
   async function initDrive(){
-    const photoGrid = document.getElementById('photoGrid');
     const videoGrid = document.getElementById('videoGrid');
 
-    if (photoGrid) photoGrid.innerHTML = `<div class="empty">불러오는 중…</div>`;
+    // 로딩 표시
+    DRIVE.photoFolders.forEach(c => {
+      const grid = document.getElementById(`photoGrid-${c.key}`);
+      if (grid) grid.innerHTML = `<div class="empty">불러오는 중…</div>`;
+    });
     if (videoGrid) videoGrid.innerHTML = `<div class="empty">불러오는 중…</div>`;
 
     // file:// 경고
@@ -546,9 +590,19 @@ API URL: ${url}`;
     }
 
     try{
-      const photos = await loadDriveFolder(DRIVE.photoFolderId);
-      if (photoGrid){
-        const html = photos
+      // ✅ Photos by 6 folders
+      const results = await Promise.all(
+        DRIVE.photoFolders.map(async (c) => {
+          const files = await loadDriveFolder(c.folderId);
+          return { ...c, files };
+        })
+      );
+
+      results.forEach(({ key, files }) => {
+        const grid = document.getElementById(`photoGrid-${key}`);
+        if (!grid) return;
+
+        const html = files
           .filter(f => (f.mimeType || '').startsWith('image/'))
           .map(f => `
             <a class="archive-item"
@@ -559,9 +613,14 @@ API URL: ${url}`;
               <img src="${driveThumb(f.id)}" alt="${f.name}" loading="lazy" />
             </a>
           `).join('');
-        photoGrid.innerHTML = html || `<div class="empty">사진이 없습니다.</div>`;
-      }
 
+        grid.innerHTML = html || `<div class="empty">사진이 없습니다.</div>`;
+      });
+
+      // 기본 탭은 c1
+      setActivePhotoTab('c1');
+
+      // ✅ Videos (single folder)
       const videos = await loadDriveFolder(DRIVE.videoFolderId);
       if (videoGrid){
         const html = videos
@@ -584,9 +643,12 @@ API URL: ${url}`;
       const msg = (err && err.message) ? err.message : 'Drive load error';
       const safe = msg.replaceAll('<','&lt;').replaceAll('>','&gt;');
 
-      const detail = `<div class="empty">Drive 연동 실패</div>`;
-      if (photoGrid) photoGrid.innerHTML = detail;
-      if (videoGrid) videoGrid.innerHTML = detail;
+      // photo error
+      DRIVE.photoFolders.forEach(c => {
+        const grid = document.getElementById(`photoGrid-${c.key}`);
+        if (grid) grid.innerHTML = `<div class="empty">Drive 연동 실패</div>`;
+      });
+      if (videoGrid) videoGrid.innerHTML = `<div class="empty">Drive 연동 실패</div>`;
 
       const noteHtml = `
         <div><strong>에러 메시지:</strong></div>
@@ -596,6 +658,15 @@ API URL: ${url}`;
       showDriveNote(driveNoteVideo, noteHtml);
     }
   }
+
+  // Photo tabs click
+  photoTabs?.addEventListener('click', (e) => {
+    const btn = e.target.closest('.tab');
+    if (!btn) return;
+    const key = btn.dataset.photo;
+    if (!key) return;
+    setActivePhotoTab(key);
+  });
 
   // ===== FAQ logic =====
   let activeKey = tablistEl?.querySelector('.tab[aria-selected="true"]')?.dataset.key
@@ -775,9 +846,8 @@ API URL: ${url}`;
   // ===== Tests (?test=1) =====
   function runTests(){
     console.assert(document.querySelectorAll('.page').length === 3, 'TEST: should have 3 pages');
+    console.assert(Array.isArray(DRIVE.photoFolders) && DRIVE.photoFolders.length === 6, 'TEST: should have 6 photo folders');
     console.assert(typeof DRIVE.apiKey === 'string' && DRIVE.apiKey.length > 10, 'TEST: apiKey should look non-empty');
-    console.assert(typeof DRIVE.photoFolderId === 'string' && DRIVE.photoFolderId.length > 5, 'TEST: photoFolderId should look non-empty');
-    console.assert(typeof DRIVE.videoFolderId === 'string' && DRIVE.videoFolderId.length > 5, 'TEST: videoFolderId should look non-empty');
     console.log('All tests passed');
   }
   if (new URLSearchParams(location.search).get('test') === '1') runTests();
