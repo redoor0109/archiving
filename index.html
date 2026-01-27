@@ -414,25 +414,14 @@
     <footer>© <span id="year"></span> FAQ</footer>
   </div>
 
-<!-- Lightbox -->
-<div id="lightbox" style="display:none; position:fixed; inset:0; z-index:9999;">
-  <div id="lbBg"
-       style="position:absolute; inset:0; background:rgba(0,0,0,.7);"></div>
-
-  <div style="
-    position:absolute;
-    left:50%; top:50%;
-    transform:translate(-50%,-50%);
-    width:min(92vw,800px);
-    background:#fff;
-    padding:12px;">
-    <button id="lbClose" style="border:0;background:none;font-weight:700;">
-      닫기
-    </button>
-    <div id="lbContent" style="margin-top:10px;"></div>
+  <!-- ===== Lightbox (Image / Video) ===== -->
+  <div id="lightbox" class="lb" aria-hidden="true">
+    <div class="lb-backdrop" data-close></div>
+    <div class="lb-panel" role="dialog" aria-modal="true" aria-label="미리보기">
+      <button class="lb-close" type="button" data-close>닫기</button>
+      <div class="lb-body" id="lbBody"></div>
+    </div>
   </div>
-</div>
-
 
 <script>
 (() => {
@@ -770,31 +759,6 @@
   }
   if (new URLSearchParams(location.search).get('test') === '1') runTests();
 })();
-
-<script>
-const lb = document.getElementById('lightbox');
-const lbContent = document.getElementById('lbContent');
-
-function openLightbox(type, src){
-  if (type === 'video'){
-    lbContent.innerHTML = `
-      <iframe src="${src}"
-              style="width:100%;aspect-ratio:16/9;border:0;"
-              allowfullscreen></iframe>`;
-  } else {
-    lbContent.innerHTML = `
-      <img src="${src}" style="width:100%;height:auto;" />`;
-  }
-  lb.style.display = 'block';
-}
-
-function closeLightbox(){
-  lb.style.display = 'none';
-  lbContent.innerHTML = '';
-}
-
-document.getElementById('lbBg').onclick = closeLightbox;
-document.getElementById('lbClose').onclick = closeLightbox;
 </script>
 </body>
 </html>
