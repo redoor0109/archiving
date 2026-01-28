@@ -248,6 +248,8 @@
 
     .empty{ padding: 14px 0; color: var(--muted); font-size:13px; border-top: 1px solid var(--line); margin-top: 10px; }
 
+.brand{ cursor:pointer; }
+
     /* Pagination */
     .pager{
       display:flex;
@@ -331,7 +333,7 @@
         </button>
         <div class="brand">
           <h1 id="title">REDOOR INFO.</h1>
-          <p id="subtitle">다가오는 일정 & 자주 묻는 질문</p>
+          <p id="subtitle"></p>
         </div>
         <div class="status" id="statusText"></div>
       </div>
@@ -345,9 +347,9 @@
           <div class="drawer-title">MENU</div>
           <button class="drawer-close" type="button" data-close aria-label="메뉴 닫기">닫기</button>
         </div>
-        <a class="drawer-link" href="#home" data-nav>HOME</a>
-        <a class="drawer-link" href="#video" data-nav>영상 아카이빙</a>
-        <a class="drawer-link" href="#photo" data-nav>사진 아카이빙</a>
+        <a class="drawer-link" href="#home" data-nav>SCHEDULE / Q&A</a>
+        <a class="drawer-link" href="#video" data-nav>VIDEO archive </a>
+        <a class="drawer-link" href="#photo" data-nav>PHOTO archive </a>
       </nav>
     </aside>
 
@@ -708,8 +710,8 @@
       <!-- ================= VIDEO PAGE ================= -->
       <section class="page" data-page="video" aria-hidden="true">
         <section class="section">
-          <div class="section-title"><h2>영상 아카이빙</h2></div>
-          <div class="archive-sub">Google Drive 영상 폴더 연동 (자동)</div>
+          <div class="section-title"><h2>VIDEO ARCHAIVE</h2></div>
+          <div class="archive-sub">보고 싶은 영상 누르면, 구글 드라이브로 넘어가서 재생·저장 가능</div>
           <div id="driveNoteVideo" class="note" hidden></div>
           <div class="archive-grid" id="videoGrid"></div>
         </section>
@@ -718,17 +720,18 @@
       <!-- ================= PHOTO PAGE ================= -->
       <section class="page" data-page="photo" aria-hidden="true">
         <section class="section">
-          <div class="section-title"><h2>사진 아카이빙</h2></div>
-          <div class="archive-sub">Google Drive 이미지 폴더 연동 (자동)</div>
+          <div class="section-title"><h2>PHOTO ARCHAIVE</h2></div>
+          <div class="archive-sub">보고 싶은 사진 누르면, 구글 드라이브로 넘어가서 확장·저장 가능<br>단체, 2명 이상 @ band_redoor 에!</div>
           <div id="driveNotePhoto" class="note" hidden></div>
 
           <div class="tabs" id="photoTabs" role="tablist" aria-label="사진 카테고리">
-            <button class="tab" type="button" aria-selected="true" data-photo="c1">C1</button>
-            <button class="tab" type="button" aria-selected="false" data-photo="c2">C2</button>
-            <button class="tab" type="button" aria-selected="false" data-photo="c3">C3</button>
-            <button class="tab" type="button" aria-selected="false" data-photo="c4">C4</button>
-            <button class="tab" type="button" aria-selected="false" data-photo="c5">C5</button>
-            <button class="tab" type="button" aria-selected="false" data-photo="c6">C6</button>
+            <button class="tab" type="button" aria-selected="true" data-photo="c1">
+@ band_redoor</button>
+            <button class="tab" type="button" aria-selected="false" data-photo="c2">@ basswoong</button>
+            <button class="tab" type="button" aria-selected="false" data-photo="c3">@ choisnhn</button>
+            <button class="tab" type="button" aria-selected="false" data-photo="c4">@ joosangug</button>
+            <button class="tab" type="button" aria-selected="false" data-photo="c5">@ olsm_</button>
+            <button class="tab" type="button" aria-selected="false" data-photo="c6">ETC</button>
           </div>
 
           <div class="archive-grid" id="photoGrid-c1" aria-hidden="false"></div>
@@ -743,7 +746,7 @@
 
     </main>
 
-    <footer>© <span id="year"></span> · 26.01.18 ver</footer>
+    <footer><span id="year"></span> · 0128 ver <br>@ ssszzzuk (X)</footer>
   </div>
 
 <script>
@@ -754,6 +757,25 @@
   const menuBtn = document.getElementById('menuBtn');
   const drawer = document.getElementById('drawer');
   const pages = [...document.querySelectorAll('.page')];
+
+// ✅ REDOOR INFO(브랜드) 클릭 → 드로어 닫고 홈(#home) 이동 + 스크롤 맨 위
+const brandEl = document.querySelector('.brand');
+if (brandEl) {
+  brandEl.addEventListener('click', () => {
+    // 드로어가 열려 있으면 닫기
+    if (drawer && drawer.getAttribute('aria-hidden') === 'false') {
+      drawer.setAttribute('aria-hidden', 'true');
+      menuBtn?.setAttribute('aria-expanded', 'false');
+    }
+
+    // 홈으로 이동
+    if (location.hash !== '#home') location.hash = '#home';
+
+    // 스크롤 맨 위
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  });
+}
+
 
   const tablistEl = document.getElementById('tablist');
   const categories = [...document.querySelectorAll('.faq-category')];
@@ -811,10 +833,20 @@
       { key: 'c4', label: 'C4', folderId: '1ulyv1QjgTILa2xZa3PAvKsJX7C7trLkl' },
       { key: 'c5', label: 'C5', folderId: '1PYVCSpXK_dDE1tVfQCAd3Ma-L9DTMd43' },
       { key: 'c6', label: 'C6', folderIds: [
-        '18UBu-bdqQQw5heQ2KJ9S8xKr6Jvz9a2L',
+        '1wGneA2TYt0THKBhVNHRLRa-pxhT4Ja4Z',
+        '1Jtl1WTwNuowb8SDT1DCyMSLdwYf0s4Jj',
+        '1HdEhsNmtlNnVroRw-LVYE_PFGpyHZz5w',
+        '1vyh_UpKUCk0qNF6VqV250fVQZJMqWWDJ',
+        '1hdePW_TWVFi3yfbpd3-B6tQdoe4y29lv',
+        '1mplgNvwOsd4MuY5rnFOuGqEyKiku11-u',
+        '14hzhjFFyZpF197v065BZZxyHBG8wplSj',
+        '1SF-8FSRvWwsjxNZUMAjdqqvOTBM0vsAF',
         '1y-ObpiDB5ptLvBj1IEBFwonrajA1fCrX',
-        'C6_폴더ID_3',
-        'C6_폴더ID_4'
+        '1WvK55GhakDzL9zqcbBFHEfY6x8MIM6KG',
+        '1YUgPX9nBoRRDz1yHgYnkuoIfcgDB7aBd',
+        '15Y9UUJuEnSepK-uy27mHtXHYh2IrUKaf',
+        '1ejnzkAJxpWz4qKaQWFTTyl-lV6rpjynO',
+        '1CJRNtmt5RELFAZsVht4J0DlKV1_y3ydP'
       ] }
     ],
     videoFolderId: '1o9k1LMCZhnUqH7PrSwU0dVV-ljWJ0A01',
