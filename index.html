@@ -721,7 +721,7 @@
       <section class="page" data-page="photo" aria-hidden="true">
         <section class="section">
           <div class="section-title"><h2>PHOTO ARCHAIVE</h2></div>
-          <div class="archive-sub">보고 싶은 사진 누르면, 구글 드라이브로 넘어가서 확장·저장 가능<br>단체, 2명 이상 @ band_redoor 에!</div>
+          <div class="archive-sub">보고 싶은 사진 누르면, 구글 드라이브로 넘어가서 확장·저장 가능<br>2명 이상 리도어에!</div>
           <div id="driveNotePhoto" class="note" hidden></div>
 
           <div class="tabs" id="photoTabs" role="tablist" aria-label="사진 카테고리">
@@ -729,7 +729,7 @@
             <button class="tab" type="button" aria-selected="false" data-photo="c2">등대</button>
             <button class="tab" type="button" aria-selected="false" data-photo="c3">상욱</button>
             <button class="tab" type="button" aria-selected="false" data-photo="c4">세웅</button>
-            <button class="tab" type="button" aria-selected="false" data-photo="c5">@승현</button>
+            <button class="tab" type="button" aria-selected="false" data-photo="c5">승현</button>
             <button class="tab" type="button" aria-selected="false" data-photo="c6">ETC</button>
           </div>
 
@@ -745,7 +745,7 @@
 
     </main>
 
-    <footer><span id="year"></span> · 0128 ver <br>@ ssszzzuk (X)</footer>
+    <footer><span id="year"></span>0128 ver <br>@ ssszzzuk (X)</footer>
   </div>
 
 <script>
@@ -827,10 +827,10 @@ if (brandEl) {
   const DRIVE = {
     photoFolders: [
       { key: 'c1', label: 'C1', folderId: '1AcOrowONBy2JPyXrd4mCR8x0khc-azDu' },
-      { key: 'c2', label: 'C2', folderId: '1PTI70CYicoaU_qj41c-NPzlm0vQecjb8' },
-      { key: 'c3', label: 'C3', folderId: '10kBeYbZ7IOQisOV2eusZDUyPgryx4rP8' },
-      { key: 'c4', label: 'C4', folderId: '1ulyv1QjgTILa2xZa3PAvKsJX7C7trLkl' },
-      { key: 'c5', label: 'C5', folderId: '1PYVCSpXK_dDE1tVfQCAd3Ma-L9DTMd43' },
+      { key: 'c2', label: 'C2', folderId: '1PYVCSpXK_dDE1tVfQCAd3Ma-L9DTMd43' },
+      { key: 'c3', label: 'C3', folderId: '1ulyv1QjgTILa2xZa3PAvKsJX7C7trLkl' },
+      { key: 'c4', label: 'C4', folderId: '1PTI70CYicoaU_qj41c-NPzlm0vQecjb8' },
+      { key: 'c5', label: 'C5', folderId: '10kBeYbZ7IOQisOV2eusZDUyPgryx4rP8' },
       { key: 'c6', label: 'C6', folderIds: [
         '1wGneA2TYt0THKBhVNHRLRa-pxhT4Ja4Z',
         '1Jtl1WTwNuowb8SDT1DCyMSLdwYf0s4Jj',
@@ -845,7 +845,8 @@ if (brandEl) {
         '1YUgPX9nBoRRDz1yHgYnkuoIfcgDB7aBd',
         '15Y9UUJuEnSepK-uy27mHtXHYh2IrUKaf',
         '1ejnzkAJxpWz4qKaQWFTTyl-lV6rpjynO',
-        '1CJRNtmt5RELFAZsVht4J0DlKV1_y3ydP'
+        '1CJRNtmt5RELFAZsVht4J0DlKV1_y3ydP',
+        '10ATKkx4Tby0iQtIJth6U867TLmYGbnx9'
       ] }
     ],
     videoFolderId: '1o9k1LMCZhnUqH7PrSwU0dVV-ljWJ0A01',
@@ -911,7 +912,7 @@ API URL: ${url}`);
     const hasPlaceholder = folderIds.some(x => String(x).includes('폴더ID'));
 
     if (!folderIds.length){
-      photoC6Wrap.innerHTML = `<div class="empty">C6 폴더가 비어있습니다.</div>`;
+      photoC6Wrap.innerHTML = `<div class="empty">폴더가 비어있습니다.</div>`;
       c6Loaded = true;
       return;
     }
@@ -928,7 +929,7 @@ API URL: ${url}`);
     }));
 
     const head = hasPlaceholder
-      ? `<div class="note"><strong>주의:</strong> C6 폴더ID에 placeholder(예: <span class="mono">C6_폴더ID_3</span>)가 남아있으면 해당 묶음은 실패합니다.</div>`
+      ? `<div class="note"><strong>주의:</strong></div>`
       : '';
 
     const body = results.map((r, idx) => {
@@ -990,13 +991,13 @@ API URL: ${url}`);
       const grid = document.getElementById(`photoGrid-${c.key}`);
       if (grid) grid.innerHTML = `<div class="empty">불러오는 중…</div>`;
     });
-    if (photoC6Wrap) photoC6Wrap.innerHTML = `<div class="empty">C6 탭에서 불러옵니다.</div>`;
+    if (photoC6Wrap) photoC6Wrap.innerHTML = `<div class="empty"></div>`;
     if (videoGrid) videoGrid.innerHTML = `<div class="empty">불러오는 중…</div>`;
 
     if (location.protocol === 'file:'){
       const msg = `
-        <div><strong>주의:</strong> 지금은 <span class="mono">file://</span> 로 열려있습니다.</div>
-        <div>Drive API가 막히거나 오동작할 수 있어요. 로컬 서버(<span class="mono">http://localhost</span>) 또는 Vercel 주소에서 테스트해 주세요.</div>
+        <div></div>
+        <div></div>
       `;
       showDriveNote(driveNotePhoto, msg);
       showDriveNote(driveNoteVideo, msg);
