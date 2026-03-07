@@ -605,6 +605,11 @@
   background:#ccc;
   border-radius:2px;
   margin:8px auto;
+  touch-action:none;
+}
+
+.day-sheet{
+  touch-action:none;
 }
 
 @media (max-width:600px){
@@ -675,23 +680,17 @@
 </div>
 
 <div id="sheetOverlay" class="sheet-overlay">
-
   <div id="daySheet" class="day-sheet">
 
     <div class="sheet-handle"></div>
 
     <div class="sheet-content">
-      <div class="sheet-header">
-        <span id="sheetDate"></span>
-      </div>
-
+      <div id="sheetDate"></div>
       <div id="sheetEvents"></div>
     </div>
 
   </div>
-
 </div>
-
         <!-- FAQ -->
            <section class="section" aria-labelledby="faqTitle">
       <div class="section-title">
@@ -1225,8 +1224,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const overlay = document.getElementById("sheetOverlay");
   const sheet = document.getElementById("daySheet");
+  const handle = document.querySelector(".sheet-handle");
 
-  // 바깥 클릭 닫기
+  // ⭐ 바깥 클릭 닫기
   overlay.addEventListener("click", () => {
     overlay.classList.remove("open");
   });
@@ -1235,17 +1235,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     e.stopPropagation();
   });
 
-  // 드래그 닫기
+  // ⭐ 드래그 닫기
   let startY = 0;
   let currentY = 0;
   let dragging = false;
 
-  sheet.addEventListener("touchstart",(e)=>{
+  handle.addEventListener("touchstart",(e)=>{
+
     startY = e.touches[0].clientY;
+    currentY = startY;
     dragging = true;
+
+    sheet.style.transition = "none";
+
   });
 
-  sheet.addEventListener("touchmove",(e)=>{
+  handle.addEventListener("touchmove",(e)=>{
 
     if(!dragging) return;
 
@@ -1254,22 +1259,30 @@ document.addEventListener("DOMContentLoaded", async () => {
     const diff = currentY - startY;
 
     if(diff > 0){
+
+      e.preventDefault();
+
       sheet.style.transform = `translateY(${diff}px)`;
+
     }
 
   });
 
-  sheet.addEventListener("touchend",()=>{
+  handle.addEventListener("touchend",()=>{
 
     dragging = false;
 
     const diff = currentY - startY;
 
-    if(diff > 120){
+    sheet.style.transition = "transform .25s ease";
+
+    if(diff > 40){
+
       overlay.classList.remove("open");
+
     }
 
-    sheet.style.transform = "";
+    sheet.style.transform = "translateY(0)";
 
   });
 
