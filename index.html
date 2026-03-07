@@ -44,6 +44,7 @@
       gap:12px;
       padding: 14px 0 12px;
     }
+    .topbar{ position: relative; }
     .icon-btn{
       border:0;
       background:transparent;
@@ -54,7 +55,14 @@
     }
     .burger{ width:20px; display:grid; gap:4px; }
     .burger span{ height:2px; background:#111; display:block; }
-    .brand{ min-width:0; }
+    .brand{
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  text-align:center;
+  min-width:0;
+}
+
     .brand h1{
       margin:0;
       font-size:16px;
@@ -70,6 +78,10 @@
       overflow:hidden;
       text-overflow:ellipsis;
     }
+    .status{
+  width: 64px;          /* 필요하면 48~80 사이로 조절 */
+  text-align: right;
+}
     .status{ font-size:12px; color: var(--muted); white-space:nowrap; }
 
     /* Drawer */
@@ -130,24 +142,40 @@
     .note strong{ color: var(--text); }
     .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
 
-    /* Upcoming (toggle list) */
-    .schedule-list{ margin-top: 10px; }
-    details.schedule{ border-top: 1px solid var(--line2); padding: 0; }
-    details.schedule:first-child{ border-top: 1px solid var(--line); }
-    details.schedule > summary{
-      list-style:none;
-      padding: 14px 0;
-      cursor:pointer;
-      display:flex;
-      gap:10px;
-      align-items:flex-start;
-    }
-    details.schedule > summary::-webkit-details-marker{ display:none; }
-    .s-title{ margin:0; font-size:14px; font-weight:800; letter-spacing:-.2px; line-height:1.3; }
-    .s-detail{ padding: 0 0 14px 0; color: var(--muted); font-size:13px; line-height:1.65; }
-    .s-detail .row{ display:flex; gap:10px; padding: 6px 0; }
-    .s-detail .k{ width:44px; flex:0 0 auto; color:#777; font-weight:800; }
-    .s-detail .v{ min-width:0; }
+.upcoming-list{
+  margin-top:12px;
+}
+
+.upcoming-card{
+  padding:14px 0;
+  border-bottom:1px solid var(--line2);
+}
+
+.upcoming-date{
+  font-size:12px;
+  font-weight:900;
+  color:#777;
+  margin-bottom:4px;
+}
+
+.upcoming-title{
+  font-size:15px;
+  font-weight:900;
+  letter-spacing:-.2px;
+}
+
+.upcoming-meta{
+  font-size:13px;
+  color:#666;
+  margin-top:4px;
+}
+
+.upcoming-location{
+  font-size:13px;
+  color:#666;
+  margin-top:4px;
+}
+
 
     /* Tabs */
     .tabs{
@@ -320,8 +348,241 @@
     }
     .c6-item img{ width:100%; height:100%; object-fit:cover; display:block; }
 
+.upcoming-list{
+  margin-top:12px;
+  border-top:1px solid var(--line);
+}
+
+.upcoming-item{
+  padding:14px 0;
+  border-bottom:1px solid var(--line2);
+  font-size:14px;
+  font-weight:800;
+  letter-spacing:-.2px;
+}
+
+#calendar{
+  margin-top:10px;
+  background:#fff;
+  border-radius:12px;
+  padding:10px;
+  border:1px solid var(--line2);
+}
+
+/* 캘린더 기본 폰트 */
+.fc{
+  font-family:inherit;
+}
+
+/* 월 제목 */
+.fc-toolbar-title{
+  font-size:18px;
+  font-weight:800;
+  letter-spacing:-.2px;
+}
+
+/* 캘린더 버튼 */
+.fc-button{
+  background:none !important;
+  border:none !important;
+  color:#444 !important;
+  font-weight:600;
+}
+
+/* 날짜 숫자 */
+.fc-daygrid-day-number{
+  font-size:13px;
+  font-weight:600;
+}
+
+/* 일요일 색 */
+.fc-day-sun .fc-daygrid-day-number{
+  color:#e53935;
+}
+
+/* 오늘 날짜 */
+.fc-day-today{
+  background:rgba(0,0,0,0.03) !important;
+}
+
+/* 날짜 셀 테두리 */
+.fc-theme-standard td,
+.fc-theme-standard th{
+  border-color:var(--line2);
+}
+
+/* 이벤트 dot 제거 */
+.fc-daygrid-event-dot{
+  display:none !important;
+}
+
+/* 기본 이벤트 스타일 제거 */
+.fc-daygrid-event{
+  background:transparent !important;
+  border:none !important;
+  padding:0 !important;
+  margin-top:2px;
+
+  white-space:normal;
+  overflow:visible;
+}
+
+/* 일정 카드 */
+.calendar-event-title{
+  display:block;
+  background:#e9eef4;
+  color:#111;
+  font-size:11px;
+  font-weight:600;
+
+  padding:2px 5px;
+  border-radius:4px;
+
+  line-height:1.3;
+  margin-top:2px;
+
+  word-break:keep-all;
+}
+
+/* hover 효과 */
+.calendar-event-title:hover{
+  background:#dfe3e7;
+}
+
+/* 오늘 일정 강조 */
+.today-event{
+  background:#f6f7f8;
+  border-radius:8px;
+  padding:14px 10px;
+}
+
+/* 이벤트 팝업 */
+.event-modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.45);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+}
+
+.event-card{
+  background:#fff;
+  width:260px;
+  padding:22px;
+  border-radius:12px;
+  text-align:center;
+  box-shadow:0 10px 30px rgba(0,0,0,.2);
+}
+
+.event-title{
+  font-size:16px;
+  font-weight:700;
+}
+
+.event-close{
+  position:absolute;
+  top:12px;
+  right:14px;
+  border:none;
+  background:none;
+  font-size:16px;
+  cursor:pointer;
+}
+
+.fc-daygrid-day:has(.calendar-event-title){
+  background:#fafbfc;
+}
+
+.popup-date-title{
+  font-size:15px;
+  font-weight:700;
+  margin-bottom:6px;
+}
+
+.popup-time{
+  font-size:13px;
+  color:#555;
+  margin-bottom:4px;
+}
+
+.popup-location{
+  font-size:13px;
+  color:#777;
+}
+
+.day-sheet{
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:-100%;
+  background:#fff;
+  border-top-left-radius:16px;
+  border-top-right-radius:16px;
+  box-shadow:0 -10px 30px rgba(0,0,0,.2);
+  transition:bottom .35s;
+  z-index:1000;
+}
+
+.day-sheet.open{
+  bottom:0;
+}
+
+.sheet-content{
+  padding:20px;
+  max-height:60vh;
+  overflow:auto;
+}
+
+.sheet-header{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:12px;
+  font-weight:700;
+}
+
+.sheet-event{
+  padding:10px 0;
+  border-bottom:1px solid #eee;
+}
+
+.sheet-title{
+  font-weight:600;
+}
+
+.sheet-meta{
+  font-size:13px;
+  color:#666;
+}
+
+.day-sheet{
+  padding-top:20px;
+  background:rgba(0,0,0,0.35);
+}
+
+.sheet-content{
+  background:#fff;
+  border-radius:16px 16px 0 0;
+}
+
+
+@media (max-width:600px){
+
+  .calendar-event-title{
+    font-size:10px;
+    padding:2px 4px;
+  }
+
+  .fc-daygrid-day-number{
+    font-size:12px;
+  }
+}
+
     footer{ padding: 18px 0 0; color:#8a8a8a; font-size:12px; text-align:center; }
   </style>
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 </head>
 
 <body>
@@ -347,7 +608,7 @@
           <div class="drawer-title">MENU</div>
           <button class="drawer-close" type="button" data-close aria-label="메뉴 닫기">닫기</button>
         </div>
-        <a class="drawer-link" href="#home" data-nav>SCHEDULE / Q&A</a>
+        <a class="drawer-link" href="#home" data-nav>SCHEDULE / FAQ </a>
         <a class="drawer-link" href="#video" data-nav>VIDEO archive </a>
         <a class="drawer-link" href="#photo" data-nav>PHOTO archive </a>
       </nav>
@@ -357,60 +618,31 @@
       <!-- ================= HOME PAGE ================= -->
       <section class="page" data-page="home" aria-hidden="false">
 
-        <section class="section" aria-labelledby="scheduleTitle">
-          <div class="section-title">
-            <h2 id="scheduleTitle">UPCOMING</h2>
-          </div>
-          <div class="schedule-list" id="scheduleList">
-            <details class="schedule">
-              <summary>
-                <p class="s-title">2026 FIRST MUSIC STATION - 고양</p>
-                <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </summary>
-              <div class="s-detail">
-                <div class="row"><div class="v">2026년 1월 31일(토) 16:50 , 킨텍스 제2전시장</div></div>
-              </div>
-            </details>
+<section class="schedule">
+  <h2>UPCOMING</h2>
+<div id="upcoming-list" class="upcoming-list"></div>
+  <h2 style="margin-top:40px;">CALENDAR</h2>
+<div id="calendar"></div>
+</section>
 
-            <details class="schedule">
-              <summary>
-                <p class="s-title">EMERGE FEST 2026 - 대만</p>
-                <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </summary>
-              <div class="s-detail">
-                <div class="row"><div class="v">2026년 2월 28일(토) 16:50 , 타이중</div></div>
-              </div>
-            </details>
+<div id="eventModal" class="event-modal">
+  <div class="event-card">
 
-            <details class="schedule">
-              <summary>
-                <p class="s-title">더 글로우 2026 (THE GLOW 2026) - 고양</p>
-                <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </summary>
-              <div class="s-detail">
-                <div class="row"><div class="v">2026년 3월 21일(토) , 킨텍스 제2전시장</div></div>
-              </div>
-            </details>
+    <button class="event-close" id="eventClose">✕</button>
 
-            <details class="schedule">
-              <summary>
-                <p class="s-title">그린캠프 페스티벌 2026 - 이천</p>
-                <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </summary>
-              <div class="s-detail">
-                <div class="row"><div class="v">2026년 4월 19일(일) , 지산 포레스트 리조트</div></div>
-              </div>
-            </details>
-          </div>
-        </section>
+    <div class="event-title" id="eventTitle"></div>
+
+  </div>
+</div>
+
+<div id="daySheet" class="day-sheet">
+  <div class="sheet-content">
+    <div class="sheet-header">
+      <span id="sheetDate"></span>
+    </div>
+    <div id="sheetEvents"></div>
+  </div>
+</div>
 
         <!-- FAQ -->
            <section class="section" aria-labelledby="faqTitle">
@@ -529,6 +761,18 @@
              <a href="https://on.soundcloud.com/bMPeZVR091gfbA9bCx" target="_blank" rel="noopener">사클 서울대입구역</a>
             </div>
           </details>
+           <details class="faq">
+            <summary>
+              <div class="q" aria-hidden="true">Q</div>
+              <div class="qtext">미발매곡 소원 라이브 영상</div>
+              <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </summary>
+            <div class="answer">
+  <a href="https://www.youtube.com/watch?v=wuXZE-eQU1k" target="_blank" rel="noopener">소원 라이브 영상 유튜브 링크</a>
+            </div>
+          </details>
           <details class="faq">
             <summary>
               <div class="q" aria-hidden="true">Q</div>
@@ -556,8 +800,21 @@
               매거진에서 가사 번역한 것은 있긴 합니다.<br>
               <a href="https://www.instagram.com/reel/DQmFUcTkqdB/" target="_blank" rel="noopener">매거진(IG) 중국어 나레이션 번역</a><br>
               <a href="https://youtu.be/q2Kaxf806zA?si=UP8dB-35OX7Zr0Cy" target="_blank" rel="noopener">청우 비하인드 13분 대 부터</a>
-
             </div>
+          </details>
+           <details class="faq">
+            <summary>
+              <div class="q" aria-hidden="true">Q</div>
+              <div class="qtext">내 방안은 푸른 바다 비하인드</div>
+              <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </summary>
+            <div class="answer"> 영원은 그렇듯은 영원을 부정하던 시기에 만들었다면, 내 방안은 푸른 바다는 어쩌면 영원한 것이 있지 않을까 생각함.
+              곡을 썼을 당시에 어릴 때부터 같이 자라고 추억도 많았던 (등대) 사촌형이 세상을 떠났고, 떠나기 전 사촌형이 밥 한 번 먹자는 연락을 함.
+              하지만, 바쁘다는 핑계로 그 약속을 지키지 못했음. 그 때 형과 마지막 추억을 남길 수 있었더라면, 마지막 기억이라도 간직했었더라면, 지금쯤
+              달라졌을까라는 생각을 종종함. 그래서 그때 느낀 것은 누군가 사라지고 서로가 사라져도 추억만큼은 거짓되지 않고 진실된 영원한 시간의 틈 속에서
+              두둥실 떠다닐 것이라고 생각함. 물론, 영원한 것은 없다고 할 수는 있지만, 억지로 찾아낸 영원이 추억이지 않을까라는 생각도 함. -251228 [FEATHERS] 단독콘서트, 내 방안은 푸른 바다 시작 전 멘트 中</div>
           </details>
         </section>
 
@@ -710,8 +967,8 @@
       <!-- ================= VIDEO PAGE ================= -->
       <section class="page" data-page="video" aria-hidden="true">
         <section class="section">
-          <div class="section-title"><h2>VIDEO ARCHAIVE</h2></div>
-          <div class="archive-sub">보고 싶은 영상 누르면, 구글 드라이브로 넘어가서 재생·저장 가능</div>
+          <div class="section-title"><h2>VIDEO ARCHIVE</h2></div>
+          <div class="archive-sub">보고 싶은 영상 누르면, 구글 드라이브로 넘어가서 재생·저장 가능<br>영상 정리 중에 있음...</div>
           <div id="driveNoteVideo" class="note" hidden></div>
           <div class="archive-grid" id="videoGrid"></div>
         </section>
@@ -720,7 +977,7 @@
       <!-- ================= PHOTO PAGE ================= -->
       <section class="page" data-page="photo" aria-hidden="true">
         <section class="section">
-          <div class="section-title"><h2>PHOTO ARCHAIVE</h2></div>
+          <div class="section-title"><h2>PHOTO ARCHIVE</h2></div>
           <div class="archive-sub">보고 싶은 사진 누르면, 구글 드라이브로 넘어가서 확장·저장 가능<br>2명 이상 리도어에!</div>
           <div id="driveNotePhoto" class="note" hidden></div>
 
@@ -749,6 +1006,187 @@
   </div>
 
 <script>
+const calendarId = "redoorfan@gmail.com";
+const apiKey = "AIzaSyDYqUApnZbrdgl1Lf-AU_fBgso7tPQoS9Q";
+let calendar;
+let calendarEvents = [];
+
+async function loadEvents(){
+
+  const now = new Date().toISOString();
+
+  const res = await fetch(
+    `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events?key=${apiKey}&timeMin=${now}&singleEvents=true&orderBy=startTime`
+  );
+
+  const data = await res.json();
+
+  calendarEvents = data.items.map(e => {
+
+    const start = new Date(e.start.dateTime || e.start.date);
+    const end = e.end?.dateTime ? new Date(e.end.dateTime) : null;
+
+    return {
+
+      title: e.summary,
+      start: e.start.dateTime || e.start.date,
+
+      extendedProps:{
+        location:(e.location || "").split(",")[0],
+        startTime:e.start.dateTime || "",
+        endTime:e.end?.dateTime || "",
+        date:start
+      }
+
+    };
+
+  });
+
+}
+
+function renderUpcoming(){
+
+  const list = document.getElementById("upcoming-list");
+  list.innerHTML = "";
+
+  calendarEvents.forEach(event => {
+
+    const start = event.extendedProps.date;
+
+    const shortDate =
+      String(start.getFullYear()).slice(2) +
+      String(start.getMonth()+1).padStart(2,'0') +
+      String(start.getDate()).padStart(2,'0');
+
+    const startTime = event.extendedProps.startTime
+      ? new Date(event.extendedProps.startTime)
+        .toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit",hour12:false})
+      : "";
+
+    const endTime = event.extendedProps.endTime
+      ? new Date(event.extendedProps.endTime)
+        .toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit",hour12:false})
+      : "";
+
+    const timeText = startTime && endTime
+      ? `${startTime} ~ ${endTime}`
+      : startTime;
+
+    const location = event.extendedProps.location;
+
+    const card = document.createElement("div");
+    card.className = "upcoming-card";
+
+    card.innerHTML = `
+      <div class="upcoming-title">[${shortDate}] ${event.title}</div>
+      <div class="upcoming-meta">${timeText}${timeText && location ? " | " : ""}${location}</div>
+    `;
+
+    card.addEventListener("click", () => {
+
+      calendar.gotoDate(start);
+
+      document.getElementById("calendar")
+      .scrollIntoView({behavior:"smooth"});
+
+    });
+
+    list.appendChild(card);
+
+  });
+
+}
+
+function initCalendar(){
+
+  const calendarEl = document.getElementById('calendar');
+
+  calendar = new FullCalendar.Calendar(calendarEl, {
+
+    initialView:'dayGridMonth',
+
+    events: calendarEvents,
+
+    eventDisplay:"block",
+
+    eventContent:function(arg){
+      return {
+        html:`<div class="calendar-event-title">${arg.event.title}</div>`
+      };
+    },
+
+    // ⭐ 일정 클릭 → 하단 슬라이드 카드
+    eventClick:function(info){
+
+      const sheet = document.getElementById("daySheet");
+      const sheetEvents = document.getElementById("sheetEvents");
+      const sheetDate = document.getElementById("sheetDate");
+
+      const start = new Date(info.event.start);
+
+      const date =
+        "[" +
+        String(start.getFullYear()).slice(2) +
+        String(start.getMonth()+1).padStart(2,"0") +
+        String(start.getDate()).padStart(2,"0") +
+        "]";
+
+      sheetEvents.innerHTML = "";
+
+      const startTime = info.event.extendedProps.startTime
+        ? new Date(info.event.extendedProps.startTime)
+          .toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit",hour12:false})
+        : "";
+
+      const endTime = info.event.extendedProps.endTime
+        ? new Date(info.event.extendedProps.endTime)
+          .toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit",hour12:false})
+        : "";
+
+      const location = info.event.extendedProps.location;
+
+      sheetDate.textContent = date;
+
+      const el = document.createElement("div");
+      el.className = "sheet-event";
+
+      el.innerHTML = `
+        <div class="sheet-title">${info.event.title}</div>
+        <div class="sheet-meta">${startTime}${endTime ? " ~ "+endTime : ""} | ${location}</div>
+      `;
+
+      sheetEvents.appendChild(el);
+
+      sheet.classList.add("open");
+
+    }
+
+  });
+
+  calendar.render();
+
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+
+  await loadEvents();
+
+  renderUpcoming();
+
+  initCalendar();
+
+});
+const sheet = document.getElementById("daySheet");
+const sheetContent = document.querySelector(".sheet-content");
+
+sheet.addEventListener("click", () => {
+  sheet.classList.remove("open");
+});
+
+sheetContent.addEventListener("click", (e) => {
+  e.stopPropagation();
+});
+
 (() => {
   const PAGE_SIZE = 5;
 
