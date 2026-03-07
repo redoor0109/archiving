@@ -566,6 +566,46 @@
   border-radius:16px 16px 0 0;
 }
 
+.sheet-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.35);
+  display:none;
+  z-index:999;
+}
+
+.sheet-overlay.open{
+  display:block;
+}
+
+.day-sheet{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  background:#fff;
+  border-radius:16px 16px 0 0;
+  transform:translateY(100%);
+  transition:transform .3s ease;
+}
+
+.sheet-overlay.open .day-sheet{
+  transform:translateY(0);
+}
+
+.sheet-content{
+  padding:20px;
+  max-height:60vh;
+  overflow:auto;
+}
+
+.sheet-handle{
+  width:40px;
+  height:4px;
+  background:#ccc;
+  border-radius:2px;
+  margin:8px auto;
+}
 
 @media (max-width:600px){
 
@@ -619,9 +659,8 @@
       <section class="page" data-page="home" aria-hidden="false">
 
 <section class="schedule">
-  <h2>UPCOMING</h2>
+  <h3>UPCOMING</h3>
 <div id="upcoming-list" class="upcoming-list"></div>
-  <h2 style="margin-top:40px;">CALENDAR</h2>
 <div id="calendar"></div>
 </section>
 
@@ -635,13 +674,22 @@
   </div>
 </div>
 
-<div id="daySheet" class="day-sheet">
-  <div class="sheet-content">
-    <div class="sheet-header">
-      <span id="sheetDate"></span>
+<div id="sheetOverlay" class="sheet-overlay">
+
+  <div id="daySheet" class="day-sheet">
+
+    <div class="sheet-handle"></div>
+
+    <div class="sheet-content">
+      <div class="sheet-header">
+        <span id="sheetDate"></span>
+      </div>
+
+      <div id="sheetEvents"></div>
     </div>
-    <div id="sheetEvents"></div>
+
   </div>
+
 </div>
 
         <!-- FAQ -->
@@ -1008,6 +1056,7 @@
 <script>
 const calendarId = "redoorfan@gmail.com";
 const apiKey = "AIzaSyDYqUApnZbrdgl1Lf-AU_fBgso7tPQoS9Q";
+
 let calendar;
 let calendarEvents = [];
 
@@ -1024,10 +1073,8 @@ async function loadEvents(){
   calendarEvents = data.items.map(e => {
 
     const start = new Date(e.start.dateTime || e.start.date);
-    const end = e.end?.dateTime ? new Date(e.end.dateTime) : null;
 
     return {
-
       title: e.summary,
       start: e.start.dateTime || e.start.date,
 
@@ -1037,12 +1084,12 @@ async function loadEvents(){
         endTime:e.end?.dateTime || "",
         date:start
       }
-
     };
 
   });
 
 }
+
 
 function renderUpcoming(){
 
@@ -1097,6 +1144,7 @@ function renderUpcoming(){
 
 }
 
+
 function initCalendar(){
 
   const calendarEl = document.getElementById('calendar');
@@ -1115,10 +1163,9 @@ function initCalendar(){
       };
     },
 
-    // ⭐ 일정 클릭 → 하단 슬라이드 카드
     eventClick:function(info){
 
-      const sheet = document.getElementById("daySheet");
+      const overlay = document.getElementById("sheetOverlay");
       const sheetEvents = document.getElementById("sheetEvents");
       const sheetDate = document.getElementById("sheetDate");
 
@@ -1157,7 +1204,7 @@ function initCalendar(){
 
       sheetEvents.appendChild(el);
 
-      sheet.classList.add("open");
+      overlay.classList.add("open");
 
     }
 
@@ -1167,6 +1214,7 @@ function initCalendar(){
 
 }
 
+
 document.addEventListener("DOMContentLoaded", async () => {
 
   await loadEvents();
@@ -1175,16 +1223,56 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   initCalendar();
 
-});
-const sheet = document.getElementById("daySheet");
-const sheetContent = document.querySelector(".sheet-content");
+  const overlay = document.getElementById("sheetOverlay");
+  const sheet = document.getElementById("daySheet");
 
-sheet.addEventListener("click", () => {
-  sheet.classList.remove("open");
-});
+  // 바깥 클릭 닫기
+  overlay.addEventListener("click", () => {
+    overlay.classList.remove("open");
+  });
 
-sheetContent.addEventListener("click", (e) => {
-  e.stopPropagation();
+  sheet.addEventListener("click", (e)=>{
+    e.stopPropagation();
+  });
+
+  // 드래그 닫기
+  let startY = 0;
+  let currentY = 0;
+  let dragging = false;
+
+  sheet.addEventListener("touchstart",(e)=>{
+    startY = e.touches[0].clientY;
+    dragging = true;
+  });
+
+  sheet.addEventListener("touchmove",(e)=>{
+
+    if(!dragging) return;
+
+    currentY = e.touches[0].clientY;
+
+    const diff = currentY - startY;
+
+    if(diff > 0){
+      sheet.style.transform = `translateY(${diff}px)`;
+    }
+
+  });
+
+  sheet.addEventListener("touchend",()=>{
+
+    dragging = false;
+
+    const diff = currentY - startY;
+
+    if(diff > 120){
+      overlay.classList.remove("open");
+    }
+
+    sheet.style.transform = "";
+
+  });
+
 });
 
 (() => {
